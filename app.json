@@ -20,6 +20,10 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
+      },
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
+        "googleMaps": {
+          "apiKey": "AIzaSyCQ1Hn6oGdicusFM7nCxviTZ7MuHqCEE-w"
       }
     },
     "web": {

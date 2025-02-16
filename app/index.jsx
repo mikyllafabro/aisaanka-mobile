@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { View, Image, Text, TouchableOpacity, Dimensions } from "react-native";
 import { Link } from "expo-router";
 import Carousel from "react-native-reanimated-carousel";
@@ -7,6 +7,7 @@ import {
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
+import HomeScreen from './auth/homescreen';
 
 // This is the default configuration
 configureReanimatedLogger({
@@ -38,7 +39,7 @@ export default function OnboardingScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   return (
-    <View className="flex-1 bg-[#4E5D6C] justify-between items-center px-6 pb-10">
+    <View style={{ flex: 1, backgroundColor: '#4E5D6C', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 30 }}>
       {/* Carousel */}
       <Carousel
         loop={false}
@@ -49,15 +50,13 @@ export default function OnboardingScreen() {
         scrollAnimationDuration={800}
         onProgressChange={(_, absoluteProgress) => setCurrentIndex(Math.round(absoluteProgress))}
         renderItem={({ item }) => (
-          <View className="items-center justify-center" style={{ width }}>
-            {/* Centered Image */}
+          <View style={{ width, alignItems: 'center', justifyContent: 'center' }}>
             <Image 
               source={item.image} 
               style={{ width: width * 0.5, height: height * 0.5, marginBottom: 20 }} 
               resizeMode="contain" 
             />
-            {/* Centered Text */}
-            <Text className="text-white text-xl font-semibold text-center">
+            <Text style={{ color: 'white', fontSize: 18, fontWeight: '600', textAlign: 'center' }}>
               {item.text}
             </Text>
           </View>
@@ -65,7 +64,7 @@ export default function OnboardingScreen() {
       />
 
       {/* Pagination Dots */}
-      <View className="flex-row space-x-2 mt-4">
+      <View style={{ flexDirection: 'row', space: 10, marginTop: 20 }}>
         {slides.map((_, index) => (
           <View
             key={index}
@@ -81,25 +80,24 @@ export default function OnboardingScreen() {
       </View>
 
       {/* Bottom Section - Always Visible */}
-      <View className="w-full items-center">
-        <TouchableOpacity className="w-full bg-[#89A6B9] py-3 rounded-full mt-6">
-          <Text className="text-center text-black font-semibold text-lg">Get Started</Text>
-        </TouchableOpacity>
-
+      <View style={{ width: '100%', alignItems: 'center' }}>
+        <Link href="/auth/homescreen" asChild>
+          <TouchableOpacity style={{ width: '100%', backgroundColor: '#89A6B9', paddingVertical: 15, borderRadius: 30, marginTop: 20 }}>
+            <Text style={{ textAlign: 'center', fontWeight: '600', fontSize: 18 }}>Get Started</Text>
+          </TouchableOpacity>
+        </Link>
+        
         <Link href="/auth/login" asChild>
-          <TouchableOpacity className="w-full bg-black py-3 rounded-full mt-4">
-            <Text className="text-center text-white font-semibold text-lg">Log in</Text>
+          <TouchableOpacity style={{ width: '100%', backgroundColor: 'black', paddingVertical: 15, borderRadius: 30, marginTop: 15 }}>
+            <Text style={{ textAlign: 'center', color: 'white', fontWeight: '600', fontSize: 18 }}>Log in</Text>
           </TouchableOpacity>
         </Link>
 
-        {/* Terms and Privacy Policy */}
-        <Text className="text-white text-xs text-center mt-4 leading-5">
-          By continuing you agree to{" "}
-          <Text className="text-blue-300">Terms of Service</Text> and{" "}
-          <Text className="text-blue-300">Privacy Policy</Text>
+        <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', marginTop: 15 }}>
+          By continuing you agree to <Text style={{ color: '#007AFF' }}>Terms of Service</Text> and <Text style={{ color: '#007AFF' }}>Privacy Policy</Text>
         </Text>
       </View>
-
+      
       <StatusBar style="auto" />
     </View>
   );
