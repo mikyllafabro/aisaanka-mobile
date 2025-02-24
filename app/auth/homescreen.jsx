@@ -3,9 +3,12 @@ import { View, Text, Button, StyleSheet, Dimensions, TextInput, FlatList, Toucha
 import MapView, { Polyline, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { getDistance } from 'geolib';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import { NavigationContainer } from '@react-navigation/native';
 
+// HomeScreen component
 const HomeScreen = ({ navigation }) => {
-  // Replace Redux state with local state
   const [count, setCount] = useState(0);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
   const [location, setLocation] = useState(null);
@@ -17,105 +20,25 @@ const HomeScreen = ({ navigation }) => {
   const [destination, setDestination] = useState(null);
   const [isChoosingSource, setIsChoosingSource] = useState(false);
   const [isChoosingDestination, setIsChoosingDestination] = useState(false);
+  const [userData, setUserData] = useState("");
+  
+  const mapViewRef = useRef(null);
 
-  const mapViewRef = useRef(null); // Reference for the MapView
-
-  const initialRegion = {
-    latitude: 14.5094,    
-    longitude: 121.0348,  
-    latitudeDelta: 1.00,  
-    longitudeDelta: 0.01,
-  };
+  async function getData() {
+    const token = await AsyncStorage.getItem("token");
+    console.log(token);
+    axios
+      .post("http://192.168.1.59:5000/userdata", { token: token })
+      .then(res => {
+        console.log(res.data);
+        setUserData(res.data.data);
+      });
+  }
 
   useEffect(() => {
-    const requestLocationPermission = async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === 'granted') {
-        setHasLocationPermission(true);
-        const location = await Location.getCurrentPositionAsync({});
-        setLocation(location.coords);
-      } else {
-        setHasLocationPermission(false);
-        Alert.alert('Permission Denied', 'You need to allow location permissions to use this feature.');
-      }
-    };
-
-    requestLocationPermission();
+    getData();
   }, []);
-
-  const handleSearch = async (query) => {
-    setSearchQuery(query);
-    if (query) {
-      setIsDropdownVisible(true);
-      const places = await getPlaces(query); // Assuming locationService handles fetching location data
-      setLocations(places);
-    } else {
-      setIsDropdownVisible(false);
-      setLocations([]);
-    }
-  };
-
-  const handleLocationSelect = (place) => {
-    setSearchQuery(place.description);
-    setIsDropdownVisible(false);
-    const selectedRegion = {
-      latitude: place.latitude,
-      longitude: place.longitude,
-      latitudeDelta: 0.015,
-      longitudeDelta: 0.015,
-    };
-
-    if (mapViewRef.current) {
-      mapViewRef.current.animateToRegion(selectedRegion, 1000); // Smooth transition
-    }
-
-    setSelectedLocation({
-      latitude: selectedRegion.latitude,
-      longitude: selectedRegion.longitude,
-    });
-  };
-
-  if (!hasLocationPermission) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Waiting for location permission...</Text>
-      </View>
-    );
-  }
-
-  const showCoordinates = () => { 
-    if (source && destination) {
-    const distance = getDistance({
-      latitude: source.latitude,
-      longitude: source.longitude
-    },{
-      latitude: destination.latitude,
-      longitude: destination.longitude
-    },) / 1000;
-
-    Alert.alert(
-      "Coordinates and Distance",
-      `Source: ${source.latitude}, ${source.longitude}
-      \nDestination: ${destination.latitude}, ${destination.longitude}
-      \nDistance: ${distance} km`,
-    );
-  } else {
-    Alert.alert("Please select source and destination first");
-  }
-};
-
-  const handleMapPress = (e) => {
-    const coordinates = e.nativeEvent.coordinate;
-    console.log(coordinates);
-    if(isChoosingSource){
-      setSource(coordinates);
-      setIsChoosingSource(false);  
-    }else if(isChoosingDestination){
-      setDestination(coordinates);
-      setIsChoosingDestination(false);
-    }
-  }
-
+    
   return (
     <View style={styles.container}>
       <View style={styles.searchBarContainer}>
@@ -123,7 +46,6 @@ const HomeScreen = ({ navigation }) => {
           style={styles.searchBar}
           placeholder="Search for a location..."
           value={searchQuery}
-          onChangeText={handleSearch}
         />
         {isDropdownVisible && (
           <FlatList
@@ -142,9 +64,7 @@ const HomeScreen = ({ navigation }) => {
       <MapView
         ref={mapViewRef}
         style={styles.map}
-        initialRegion={initialRegion}
         showsUserLocation={true}
-        onPress={handleMapPress}
       >
         {selectedLocation && (
           <Marker
@@ -156,64 +76,95 @@ const HomeScreen = ({ navigation }) => {
 
         {source && (
           <Marker
-          coordinate={source}
-          title={"Source"}
-          pinColor={'green'}
-          draggable={true}
-          onDragEnd={e=>setSource(e.nativeEvent.coordinate)}
+            coordinate={source}
+            title={"Source"}
+            pinColor={'green'}
+            draggable={true}
+            onDragEnd={e => setSource(e.nativeEvent.coordinate)}
           />
         )}
 
         {destination && (
           <Marker
-          coordinate={destination}
-          title={"Destination"}
-          pinColor={'blue'}
-          draggable={true}
-          onDragEnd={e=>setDestination(e.nativeEvent.coordinate)}
+            coordinate={destination}
+            title={"Destination"}
+            pinColor={'blue'}
+            draggable={true}
+            onDragEnd={e => setDestination(e.nativeEvent.coordinate)}
           />
-        )}  
+        )}
+
         {source && destination && (
           <Polyline
-          coordinates={[source, destination]}
-          strokeColor="#000"
-          strokewidth={2}
+            coordinates={[source, destination]}
+            strokeColor="#000"
+            strokeWidth={2}
           />
         )}
       </MapView>
         
       <View style={styles.buttonContainer}>
         <View style={styles.buttonGroup}>
-          {source?(
+          {source ? (
             <Button 
-            title="Remove Source" 
-            onPress={()=>setSource(null)} />
+              title="Remove Source" 
+              onPress={() => setSource(null)} />
           ) : (
-          <Button
-            title={isChoosingSource?'Please Choose Source':"Choose Source"}
-            onPress={() => setIsChoosingSource(true)}
-          />
+            <Button
+              title={isChoosingSource ? 'Please Choose Source' : "Choose Source"}
+              onPress={() => setIsChoosingSource(true)}
+            />
           )}
-          {destination?(
+          {destination ? (
             <Button 
-            title="Remove Destination" 
-            onPress={()=>setDestination(null)} />
+              title="Remove Destination" 
+              onPress={() => setDestination(null)} />
           ) : (
-          <Button
-            title={isChoosingDestination?'Please Choose Destination':"Choose Destination"}
-            onPress={() => setIsChoosingDestination(true)}
-          />
+            <Button
+              title={isChoosingDestination ? 'Please Choose Destination' : "Choose Destination"}
+              onPress={() => setIsChoosingDestination(true)}
+            />
           )}
-          
         </View>
       </View>
 
-      <Button title="Get Direction" onPress={showCoordinates}/>
-      {/* This part must be replaced with the actual representation of getting direction from source to destination */}
       <Button title="Go to Details" onPress={() => navigation.navigate('Details')} />
     </View>
   );
 };
+
+// Details Screen (add this screen)
+const DetailsScreen = () => {
+  return (
+    <View style={styles.container}>
+      <Text>Details Screen</Text>
+    </View>
+  );
+};
+
+// Create Drawer navigator
+const Drawer = createDrawerNavigator();
+
+// AppDrawer component (Drawer navigation)
+const AppDrawer = () => (
+  <Drawer.Navigator
+    screenOptions={{
+      drawerPosition: 'right', // Make the drawer appear on the right
+    }}
+  >
+    <Drawer.Screen name="Home" component={HomeScreen} />
+    <Drawer.Screen name="Details" component={DetailsScreen} /> {/* Add Details Screen */}
+  </Drawer.Navigator>
+);
+
+// Main App Component (Navigation container only here)
+export default function App() {
+  return (
+    <NavigationContainer>
+      <AppDrawer /> {/* Wrap your drawer here inside a single NavigationContainer */}
+    </NavigationContainer>
+  );
+}
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
@@ -226,5 +177,3 @@ const styles = StyleSheet.create({
   buttonContainer: { position: '', bottom: 20, left: 20, right: 20, paddingHorizontal: 15 },
   buttonGroup: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
 });
-
-export default HomeScreen;

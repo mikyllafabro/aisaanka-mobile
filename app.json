@@ -23,7 +23,7 @@
       },
       "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
         "googleMaps": {
-          "apiKey": "AIzaSyCQ1Hn6oGdicusFM7nCxviTZ7MuHqCEE-w"
+          "apiKey": "AIzaSyA95PKITYX6vnFS2d4gIS2J9caKnP0w-bA"
       }
     },
     "web": {

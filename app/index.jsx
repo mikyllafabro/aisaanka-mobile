@@ -1,19 +1,8 @@
 import React, { useState } from "react";
-import { View, Image, Text, TouchableOpacity, Dimensions } from "react-native";
+import { View, Image, Text, TouchableOpacity, Dimensions, Animated } from "react-native";
 import { Link } from "expo-router";
 import Carousel from "react-native-reanimated-carousel";
 import { StatusBar } from "expo-status-bar";
-import {
-  configureReanimatedLogger,
-  ReanimatedLogLevel,
-} from 'react-native-reanimated';
-import HomeScreen from './auth/homescreen';
-
-// This is the default configuration
-configureReanimatedLogger({
-  level: ReanimatedLogLevel.warn,
-  strict: false, // Reanimated runs in strict mode by default
-});
 
 const { width, height } = Dimensions.get("window");
 
@@ -38,9 +27,17 @@ const slides = [
 export default function OnboardingScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  const animatedValue = new Animated.Value(5);
+
+  Animated.spring(animatedValue, {
+    toValue: 1,
+    friction: 5,
+    tension: 500,
+    useNativeDriver: true,
+  }).start();
+
   return (
     <View style={{ flex: 1, backgroundColor: '#4E5D6C', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 30 }}>
-      {/* Carousel */}
       <Carousel
         loop={false}
         width={width}
@@ -51,11 +48,30 @@ export default function OnboardingScreen() {
         onProgressChange={(_, absoluteProgress) => setCurrentIndex(Math.round(absoluteProgress))}
         renderItem={({ item }) => (
           <View style={{ width, alignItems: 'center', justifyContent: 'center' }}>
-            <Image 
-              source={item.image} 
-              style={{ width: width * 0.5, height: height * 0.5, marginBottom: 20 }} 
-              resizeMode="contain" 
-            />
+            <Animated.View
+              style={{
+                transform: [
+                  {
+                    rotateY: animatedValue.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0deg', '15deg'],
+                    }),
+                  },
+                  {
+                    scale: animatedValue.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 1.1],
+                    }),
+                  },
+                ],
+              }}
+            >
+              <Image
+                source={item.image}  // Use Image component if FastImage is not working
+                style={{ width: width * 0.5, height: height * 0.5, marginBottom: 20 }}
+                resizeMode="contain"
+              />
+            </Animated.View>
             <Text style={{ color: 'white', fontSize: 18, fontWeight: '600', textAlign: 'center' }}>
               {item.text}
             </Text>
@@ -71,7 +87,7 @@ export default function OnboardingScreen() {
             style={{
               width: 10,
               height: 10,
-              borderRadius: 5,
+              borderRadius: 15,
               backgroundColor: index === currentIndex ? "white" : "gray",
               opacity: index === currentIndex ? 1 : 0.5,
             }}
@@ -86,7 +102,7 @@ export default function OnboardingScreen() {
             <Text style={{ textAlign: 'center', fontWeight: '600', fontSize: 18 }}>Get Started</Text>
           </TouchableOpacity>
         </Link>
-        
+
         <Link href="/auth/login" asChild>
           <TouchableOpacity style={{ width: '100%', backgroundColor: 'black', paddingVertical: 15, borderRadius: 30, marginTop: 15 }}>
             <Text style={{ textAlign: 'center', color: 'white', fontWeight: '600', fontSize: 18 }}>Log in</Text>
@@ -97,7 +113,7 @@ export default function OnboardingScreen() {
           By continuing you agree to <Text style={{ color: '#007AFF' }}>Terms of Service</Text> and <Text style={{ color: '#007AFF' }}>Privacy Policy</Text>
         </Text>
       </View>
-      
+
       <StatusBar style="auto" />
     </View>
   );

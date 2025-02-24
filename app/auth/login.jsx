@@ -1,11 +1,47 @@
-import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
-import { useRouter } from "expo-router";
+import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } from "react-native";
+import { useNavigation, useRouter } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons"; 
+import { useState } from "react";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BASE_URL } from "@env";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+
+  function handleSubmit() {
+    console.log(email, password);  // Make sure email and password are correctly set.
+    const userData = {
+      email: email,
+      password,
+    };
+  
+    axios
+      .post(`${BASE_URL}/login`, userData)
+      .then(res => {
+        console.log("Response from server: ", res.data);
+        if (res.data.status === "ok") {
+          console.log("Login successful! Token: ", res.data.data);
+          Alert.alert("Login successful!");
+          AsyncStorage.setItem("token", res.data.data);
+
+          router.push("/Screen/main");
+        } else {
+          console.log("Login failed: ", res.data.data);
+        }
+      })
+      .catch(error => {
+        console.error("Login error: ", error.response ? error.response.data : error.message);
+      });
+  }
+  
 
   return (
+    <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps={"always"}>
     <View className="flex-1 items-center justify-center bg-[#4E5D6C] px-6">
       
       {/* Logo */}
@@ -25,6 +61,7 @@ export default function LoginScreen() {
           placeholder="Enter your email or username"
           placeholderTextColor="#4E5D6C"
           className="ml-3 flex-1 text-black"
+          onChange={e => setEmail(e.nativeEvent.text)}
         />
       </View>
 
@@ -36,13 +73,14 @@ export default function LoginScreen() {
           placeholderTextColor="#4E5D6C"
           secureTextEntry
           className="ml-3 flex-1 text-black"
+          onChange={e => setPassword(e.nativeEvent.text)}
         />
       </View>
 
       {/* Sign In Button (Navigates to Main) */}
       <TouchableOpacity 
         className="w-full bg-black py-3 rounded-full mb-4 shadow-md"
-        onPress={() => router.push("/screen/main")} // ✅ Navigates to Main
+        onPress={() => handleSubmit()} 
       >
         <Text className="text-center text-white text-lg font-semibold">Login</Text>
       </TouchableOpacity>
@@ -77,5 +115,7 @@ export default function LoginScreen() {
         <Text className="text-blue-300">Privacy Policy</Text>
       </Text>
     </View>
+  </ScrollView>
   );
+
 }
