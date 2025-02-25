@@ -1,11 +1,13 @@
 import { View, TextInput, TouchableOpacity, Text, Image, FlatList, Dimensions, Alert, Button } from "react-native";
 import React, { useState, useEffect } from "react";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
-import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
+import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
+import { FontAwesome, FontAwesome6, FontAwesome5 } from "@expo/vector-icons";
 import { PanResponder } from "react-native";
 import * as Location from "expo-location"; // Importing Expo Location
 import axios from "axios";
 import { GOOGLE_MAPS_API_KEY } from '@env';
+import getCommuteSteps from "./CommuteGuide";
+import polyline from "@mapbox/polyline";
 
 console.log("Loaded API Key:", GOOGLE_MAPS_API_KEY);
 
@@ -21,7 +23,14 @@ const Main = () => {
   const [destinationLocation, setDestinationLocation] = useState(null);
   const [searchBoxHeight, setSearchBoxHeight] = useState(height * 0.30); 
   const mapRef = React.useRef(null); // Create reference for MapView
-
+  const [commuteSteps, setCommuteSteps] = useState([]);
+  const [isCommuteModalVisible, setIsCommuteModalVisible] = useState(false);
+  const [modalHeight, setModalHeight] = useState(200); // Default height, can be dragged
+  const [isCommuteGuideVisible, setIsCommuteGuideVisible] = useState(false);
+  const [sliderHeight, setSliderHeight] = useState(250); // Default height
+  const [routeCoordinates, setRouteCoordinates] = useState([]); // Store polyline routes
+  const [alternativeRoutes, setAlternativeRoutes] = useState([]);
+  
 
   // Get real-time location
   useEffect(() => {
@@ -200,27 +209,26 @@ const Main = () => {
 };
 
   
-  const calculateFare = () => {
-    if (selectedLocation && destinationLocation) {
-      axios
-        .get(
-          `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${selectedLocation.latitude},${selectedLocation.longitude}&destinations=${destinationLocation.latitude},${destinationLocation.longitude}&key=AIzaSyA97iQhpD5yGyKeHxmPOkGMTM7cqmGcuS8`
-        )
-        .then((response) => {
-          const distance = response.data.rows[0].elements[0].distance.value; // Distance in meters
-          const fare = calculateFareFromDistance(distance);
-          console.log("Calculated Fare:", fare);
-          Alert.alert("Fare Estimate", `Estimated Fare: PHP ${fare.toFixed(2)}`);
-        })
-        .catch((error) => {
-          console.error(error);
-          Alert.alert("Error", "Failed to calculate fare.");
-        });
-    } else {
-      Alert.alert("Error", "Please select a source and destination.");
+const calculateFare = async () => {
+  if (selectedLocation && destinationLocation) {
+    try {
+      const commuteData = await getCommuteSteps(selectedLocation, destinationLocation);
+
+      if (commuteData.status !== "success") {
+        Alert.alert("Error", "No available routes found.");
+        return;
+      }
+
+      setAlternativeRoutes(commuteData.routes);
+      setIsCommuteModalVisible(true);
+    } catch (error) {
+      console.error("Error:", error);
+      Alert.alert("Error", "Failed to calculate commute options.");
     }
-  };
-  
+  } else {
+    Alert.alert("Error", "Please select a source and destination.");
+  }
+};
   
   
   const calculateFareFromDistance = (distance) => {
@@ -231,45 +239,141 @@ const Main = () => {
   
   
 
-  // Handle pan gesture for sliding effect
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onPanResponderMove: (event, gestureState) => {
       const { dy } = gestureState;
-
-      // Define the boundaries (15% to 75% of screen height)
-      let newHeight = searchBoxHeight - dy;
-      if (newHeight < height * 0.15) newHeight = height * 0.15; // Prevent going below 15%
-      if (newHeight > height * 0.75) newHeight = height * 0.75; // Prevent going above 75%
-      setSearchBoxHeight(newHeight); // Update search box height
+  
+      // Adjusting modal height dynamically while dragging
+      let newHeight = modalHeight - dy;
+      if (newHeight < height * 0.3) newHeight = height * 0.3; // Prevent shrinking too much
+      if (newHeight > height * 0.7) newHeight = height * 0.7; // Prevent covering full screen
+  
+      setModalHeight(newHeight); // Update modal height dynamically
     },
     onPanResponderRelease: () => {},
   });
+  
+  
 
   // Focus map on current location
-  const focusOnLocation = () => {
-    if (location && mapRef.current) {
-        mapRef.current.animateToRegion(
-            {
-                latitude: location.latitude,
-                longitude: location.longitude,
-                latitudeDelta: 0.050,
-                longitudeDelta: 0.050,
-            },
-            1000 // The animation duration in milliseconds (1000 = 1 second)
-        );
+  const focusOnLocation = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+        Alert.alert("Permission Denied", "Location permission is required to use this feature.");
+        return;
     }
-  };
 
+    // Get the latest user location
+    const userLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+    });
 
-  
+    const { latitude, longitude } = userLocation.coords;
+
+    try {
+        // Fetch the address from Google Maps API
+        const response = await axios.get(
+            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`
+        );
+
+        console.log("Reverse Geocode Response:", response.data);
+
+        if (response.data.status !== "OK" || !response.data.results.length) {
+            throw new Error("No address found.");
+        }
+
+        const fetchedAddress = response.data.results[0].formatted_address; // Get the first result
+        console.log("Fetched Address:", fetchedAddress);
+
+        // Animate the map to the latest location
+        if (mapRef.current) {
+            mapRef.current.animateToRegion(
+                {
+                    latitude,
+                    longitude,
+                    latitudeDelta: 0.050,
+                    longitudeDelta: 0.050,
+                },
+                1000 // Animation duration
+            );
+        }
+
+        // Update the selected location marker dynamically
+        setSelectedLocation({
+            latitude,
+            longitude,
+            name: "My Location",
+            address: fetchedAddress,
+        });
+
+        // ✅ Update the first text input with the fetched location
+        handleSearch(fetchedAddress); // This will trigger the existing search function
+
+    } catch (error) {
+        console.error("Error fetching address:", error);
+        Alert.alert("Error", "Failed to retrieve address.");
+    }
+};
+
+const handleMapPress = async (coordinate) => {
+  const { latitude, longitude } = coordinate;
+
+  try {
+      // Fetch the address from Google Maps API
+      const response = await axios.get(
+          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`
+      );
+
+      console.log("Tapped Location Geocode Response:", response.data);
+
+      if (response.data.status !== "OK" || !response.data.results.length) {
+          throw new Error("No address found.");
+      }
+
+      const tappedAddress = response.data.results[0].formatted_address; // Get the first result
+      console.log("Tapped Address:", tappedAddress);
+
+      // Update the selected location marker dynamically
+      setSelectedLocation({
+          latitude,
+          longitude,
+          name: "Pinned Location",
+          address: tappedAddress,
+      });
+
+      // ✅ Update the first text input with the tapped place name
+      handleSearch(tappedAddress);
+
+  } catch (error) {
+      console.error("Error fetching tapped address:", error);
+      Alert.alert("Error", "Failed to retrieve address for pinned location.");
+  }
+};
+
+const decodePolyline = (encoded) => {
+  if (!encoded) {
+    console.error("Error: No encoded polyline data received.");
+    return [];
+  }
+
+  try {
+    return polyline.decode(encoded).map(([latitude, longitude]) => ({
+      latitude,
+      longitude,
+    }));
+  } catch (error) {
+    console.error("Error decoding polyline:", error);
+    return [];
+  }
+};
 
   return (
     <View className="flex-1">
       {/* Map Background */}
       <MapView
         provider={PROVIDER_GOOGLE}
-        style={{ width: width, height: height - searchBoxHeight }}
+        style={{ width: width, height: height - 56 }}
         ref={mapRef} // Reference for animation
         initialRegion={{
           latitude: 14.5995, // Metro Manila's latitude
@@ -278,9 +382,10 @@ const Main = () => {
           longitudeDelta: 0.1, // Adjust to zoom level
         }}
         showsUserLocation={true} // Show the user's location on the map
+        onPress={(event) => handleMapPress(event.nativeEvent.coordinate)} // New feature
       >
 
-        {selectedLocation && (
+        {/* {selectedLocation && (
           <Marker
             coordinate={{
               latitude: selectedLocation.latitude,
@@ -289,9 +394,20 @@ const Main = () => {
             title={selectedLocation.name}
             description={selectedLocation.address}
           />
-        )}
+        )} */}
 
-        {destinationLocation && (
+{selectedLocation?.latitude && selectedLocation?.longitude ? (
+  <Marker
+    coordinate={{
+      latitude: selectedLocation.latitude,
+      longitude: selectedLocation.longitude,
+    }}
+    title="Start"
+  />
+) : null}
+
+
+        {/* {destinationLocation && (
           <Marker
             coordinate={{
               latitude: destinationLocation.latitude,
@@ -301,7 +417,18 @@ const Main = () => {
             description={destinationLocation.address}
             pinColor="green"
           />
-        )}
+        )} */}
+
+{destinationLocation?.latitude && destinationLocation?.longitude ? (
+  <Marker
+    coordinate={{
+      latitude: destinationLocation.latitude,
+      longitude: destinationLocation.longitude,
+    }}
+    title="Destination"
+  />
+) : null}
+
 
 {places.map((place, index) => (
     place.geometry && place.geometry.location ? ( // Ensure geometry exists
@@ -317,30 +444,163 @@ const Main = () => {
     ) : null
 ))}
 
+{/* Draw Route Lines */}
+{routeCoordinates.length > 0 &&
+  routeCoordinates.map((encodedPolyline, index) => (
+    <Polyline
+      key={index}
+      coordinates={decodePolyline(encodedPolyline)}
+      strokeWidth={4}
+      strokeColor={index === 0 ? "#00DF82" : index === 1 ? "#FFA500" : "#FF4500"}
+    />
+  ))}
+
+
+
+  {/* Show Transport Icons Along Route */}
+  {/* {commuteSteps.map((step, index) =>
+  step.details && step.details.icon ? (
+    <Marker
+      key={index}
+      coordinate={{
+        latitude: step.details.from.lat,
+        longitude: step.details.from.lng,
+      }}
+      title={step.details.line}
+    >
+      <Image source={{ uri: step.details.icon }} style={{ width: 30, height: 30 }} />
+    </Marker>
+  ) : null
+)} */}
+
+{commuteSteps.map((step, index) =>
+  step.details &&
+  step.details.from?.lat &&
+  step.details.from?.lng ? (
+    <Marker
+      key={index}
+      coordinate={{
+        latitude: step.details.from.lat,
+        longitude: step.details.from.lng,
+      }}
+      title={step.details.line}
+    />
+  ) : null
+)}
+
 
       </MapView>
 
+      {isCommuteModalVisible && (
+  <View
+    style={{
+      position: "absolute",
+      bottom: 0,
+      width: "100%",
+      backgroundColor: "#fff",
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      padding: 20,
+      maxHeight: height * 0.7, // Limits to 70% of screen height
+      minHeight: height * 0.3, // Minimum height (prevents overlap)
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      zIndex: 5,
+    }}
+  >
+    {/* Draggable Indicator */}
+    <View
+      {...panResponder.panHandlers}
+      style={{
+        alignSelf: "center",
+        width: 50,
+        height: 5,
+        backgroundColor: "#888",
+        borderRadius: 5,
+        marginBottom: 10,
+      }}
+    />
+
+    <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>Select a Route</Text>
+
+    {/* Scrollable List of Routes */}
+    <FlatList
+      data={alternativeRoutes}
+      keyExtractor={(item) => item.id.toString()}
+      style={{ flexGrow: 1 }} // Ensures full scrolling
+      contentContainerStyle={{ paddingBottom: 20 }} // Avoids cutting off last item
+      renderItem={({ item }) => (
+        <TouchableOpacity
+          style={{
+            backgroundColor: "#F5F5F5",
+            borderRadius: 10,
+            padding: 15,
+            marginBottom: 10,
+          }}
+          onPress={() => {
+            setRouteCoordinates(item.polyline);
+            setCommuteSteps(item.steps);
+            setIsCommuteModalVisible(false);
+          }}
+        >
+          <Text style={{ fontWeight: "bold" }}>🚍 {item.summary}</Text>
+          <Text>⏳ Duration: {item.duration}</Text>
+          <Text>💰 Estimated Fare: {item.fare}</Text>
+        </TouchableOpacity>
+      )}
+    />
+  </View>
+)}
+
+
+
+    {/* Close Button */}
+    <TouchableOpacity
+      style={{
+        position: "absolute",
+        top: 10,
+        right: 20,
+        backgroundColor: "#4E5D6C",
+        padding: 8,
+        borderRadius: 20,
+      }}
+      onPress={() => setIsCommuteModalVisible(false)}
+    >
+      <Text style={{ color: "white", fontWeight: "bold" }}>✖</Text>
+    </TouchableOpacity>
 
       {/* Bottom Search Section */}
       <View
-        className="absolute bottom-0 w-full bg-[#4E5D6C] rounded-t-3xl p-6"
-        style={{ height: searchBoxHeight }}
-        {...panResponder.panHandlers} // Enable sliding effect
-      >
-        {/* Draggable Indicator (Line) */}
-        <View style={{ alignSelf: "center", width: 40, height: 5, backgroundColor: "white", borderRadius: 5, marginBottom: 10 }} />
+    style={{
+    opacity: 0.95,
+    position: "absolute",
+    top: 10,
+    left: 50,
+    right: 54,
+    backgroundColor: "#03624C",
+    borderRadius: 20,
+    padding: 2,
+    elevation: 1,
+    shadowColor: "#030F0F",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 25,
+  }}
+>
+    {/* Draggable Indicator (Line) */}
+    {/* <View style={{ alignSelf: "center", width: 40, height: 5, backgroundColor: "#00DF82", borderRadius: 5, marginBottom: 2 }} /> */}
 
-        {/* Search Bar */}
-        <View className="w-full bg-white flex-row items-center px-4 py-3 rounded-full shadow-md mb-4">
-          <FontAwesome name="search" size={20} color="#4E5D6C" />
-          <TextInput
-            placeholder="Search for places"
-            placeholderTextColor="#4E5D6C"
-            value={searchQuery || ""}  // Ensure it's never null
-            onChangeText={(text) => handleSearch(text)}
-            style={{ flex: 1, marginLeft: 10, fontSize: 16 }}
-          />
-        </View>
+<View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+    <FontAwesome name="map-marker" size={20} color="red" margin="13" />
+    <TextInput
+      placeholder="Select Your Location"
+      value={searchQuery || ""}
+      onChangeText={handleSearch}
+      style={{ flex: 1, marginLeft: 8, fontSize: 14, color: "white", fontWeight: "bold" }}
+    />
+  </View>
 
         {/* Display Start Search Results */}
         {places.length > 0 && (
@@ -348,25 +608,24 @@ const Main = () => {
           data={places}
           keyExtractor={(item) => item.place_id}
           renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => selectPlace(item)} style={{ paddingVertical: 10 }}>
+            <TouchableOpacity onPress={() => selectPlace(item)} style={{ paddingVertical: 15, marginHorizontal: 15 }}>
               <Text className="text-white text-sm">{item.description}</Text>
             </TouchableOpacity>
           )}
-            style={{ maxHeight: 150, marginBottom: 10 }}
+            style={{ maxHeight: 50, marginBottom: 3 }}
           />
         )}
 
         {/* Destination Search Bar */}
-        <View className="w-full bg-white flex-row items-center px-4 py-3 rounded-full shadow-md mb-4">
-          <FontAwesome name="search" size={20} color="#4E5D6C" />
-          <TextInput
-            placeholder="Search for destination"
-            placeholderTextColor="#4E5D6C"
-            value={destinationQuery || ""}
-            onChangeText={(text) => handleDestinationSearch(text)}
-            style={{ flex: 1, marginLeft: 10, fontSize: 16 }}
-          />
-        </View>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+    <FontAwesome name="flag-checkered" size={18} color="lightgreen" margin="10" />
+    <TextInput
+      placeholder="Select Destination"
+      value={destinationQuery || ""}
+      onChangeText={handleDestinationSearch}
+      style={{ flex: 1, marginLeft: 8, fontSize: 14, color: "white", fontWeight: "bold" }}
+    />
+  </View>
 
         {/* Display Destination Search Results */}
         {places.length > 0 && (
@@ -374,26 +633,39 @@ const Main = () => {
             data={places}
             keyExtractor={(item) => item.place_id}
             renderItem={({ item }) => (
-              <TouchableOpacity onPress={() => selectDestination(item)} style={{ paddingVertical: 10 }}>
+              <TouchableOpacity onPress={() => selectDestination(item)} style={{ paddingVertical: 15, marginHorizontal: 15 }}>
                 <Text className="text-white text-sm">{item.description}</Text>
               </TouchableOpacity>
             )}
-              style={{ maxHeight: 150, marginBottom: 10 }}
+              style={{ maxHeight: 50, marginBottom: 3 }}
           />
         )}
 
-
-        {/* Display Selected Location Details */}
-        {selectedLocation && (
-          <View>
+        {/* {selectedLocation && (
+          <View style={{ padding: 10 }}>
             <Text className="text-white text-lg font-bold">{selectedLocation.name}</Text>
-            <Text className="text-green-400 text-sm font-semibold">{selectedLocation.status}</Text>
             <Text className="text-white text-sm">{selectedLocation.address}</Text>
           </View>
-        )}
+        )} */}
       </View>
 
-      <Button title="Calculate Fare" onPress={calculateFare} />
+      <TouchableOpacity
+        style={{
+          position: "absolute",
+          bottom: searchBoxHeight + 70,
+          right: 20,
+          backgroundColor: "#4E5D6C",
+          padding: 10,
+          borderRadius: 50,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.2,
+          shadowRadius: 4.65,
+        }}
+        onPress={calculateFare}
+      >
+        <FontAwesome5 name="directions" size={24} color="white" />
+      </TouchableOpacity>
 
       {/* Focus on Location Button */}
       <TouchableOpacity
@@ -408,6 +680,7 @@ const Main = () => {
           shadowOffset: { width: 0, height: 3 },
           shadowOpacity: 0.2,
           shadowRadius: 4.65,
+          pinColor:"red",
         }}
         onPress={focusOnLocation}
       >

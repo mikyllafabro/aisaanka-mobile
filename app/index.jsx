@@ -3,6 +3,7 @@ import { View, Image, Text, TouchableOpacity, Dimensions, Animated } from "react
 import { Link } from "expo-router";
 import Carousel from "react-native-reanimated-carousel";
 import { StatusBar } from "expo-status-bar";
+import { RootLayout } from "../app/_layout";
 
 const { width, height } = Dimensions.get("window");
 
@@ -37,7 +38,8 @@ export default function OnboardingScreen() {
   }).start();
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#4E5D6C', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 30 }}>
+    <View style={{ flex: 1, backgroundColor: '#03624C', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 30 }}>
+      <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold', marginTop: 50 }}>Ai SaanKa?</Text>
       <Carousel
         loop={false}
         width={width}
@@ -72,7 +74,7 @@ export default function OnboardingScreen() {
                 resizeMode="contain"
               />
             </Animated.View>
-            <Text style={{ color: 'white', fontSize: 18, fontWeight: '600', textAlign: 'center' }}>
+            <Text style={{ color: '030F0F', fontSize: 18, fontWeight: '600', textAlign: 'center' }}>
               {item.text}
             </Text>
           </View>
@@ -98,14 +100,14 @@ export default function OnboardingScreen() {
       {/* Bottom Section - Always Visible */}
       <View style={{ width: '100%', alignItems: 'center' }}>
         <Link href="/auth/homescreen" asChild>
-          <TouchableOpacity style={{ width: '100%', backgroundColor: '#89A6B9', paddingVertical: 15, borderRadius: 30, marginTop: 20 }}>
-            <Text style={{ textAlign: 'center', fontWeight: '600', fontSize: 18 }}>Get Started</Text>
+          <TouchableOpacity style={{ width: '100%', backgroundColor: '#00DF82', paddingVertical: 15, borderRadius: 30, marginTop: 20 }}>
+            <Text style={{ textAlign: 'center', color: '#030F0F',fontWeight: '600', fontSize: 18 }}>Get Started</Text>
           </TouchableOpacity>
         </Link>
 
         <Link href="/auth/login" asChild>
-          <TouchableOpacity style={{ width: '100%', backgroundColor: 'black', paddingVertical: 15, borderRadius: 30, marginTop: 15 }}>
-            <Text style={{ textAlign: 'center', color: 'white', fontWeight: '600', fontSize: 18 }}>Log in</Text>
+          <TouchableOpacity style={{ width: '100%', backgroundColor: '#030F0F', paddingVertical: 15, borderRadius: 30, marginTop: 15 }}>
+            <Text style={{ textAlign: 'center', color: '#00DF82', fontWeight: '600', fontSize: 18 }}>Log in</Text>
           </TouchableOpacity>
         </Link>
 

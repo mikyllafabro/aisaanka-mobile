@@ -42,7 +42,8 @@ export default function LoginScreen() {
 
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps={"always"}>
-    <View className="flex-1 items-center justify-center bg-[#4E5D6C] px-6">
+    <View className="flex-1 items-center justify-center bg-[#4E5D6C] px-6"
+      style={{ backgroundColor:"#03624C" }}>
       
       {/* Logo */}
       <Image 
@@ -82,7 +83,8 @@ export default function LoginScreen() {
         className="w-full bg-black py-3 rounded-full mb-4 shadow-md"
         onPress={() => handleSubmit()} 
       >
-        <Text className="text-center text-white text-lg font-semibold">Login</Text>
+        <Text className="text-center text-white text-lg font-semibold" backgroundColor="#030F0F"
+        style={{ color: '#00DF82'}}>Login</Text>
       </TouchableOpacity>
 
       {/* OR Separator */}
@@ -93,12 +95,13 @@ export default function LoginScreen() {
       </View>
 
       {/* Google Login Button */}
-      <TouchableOpacity className="w-full bg-white py-3 rounded-full flex-row items-center justify-center shadow-md">
+      <TouchableOpacity className="w-full bg-white py-3 rounded-full flex-row items-center justify-center shadow-md" style={{ backgroundColor: "#00DF82" }}>
         <Image 
           source={{ uri: "https://upload.wikimedia.org/wikipedia/commons/0/09/Google_favicon_2015.png" }}  
           style={{ width: 24, height: 24, marginRight: 12 }}
         />
-        <Text className="text-black text-lg font-semibold">Login with Google</Text>
+        <Text className="text-lg font-semibold"
+        style={{ color: '#030F0F'}}>Login with Google</Text>
       </TouchableOpacity>
 
       {/* Sign Up Link */}
