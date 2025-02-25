@@ -1,8 +1,7 @@
-import { View, TextInput, TouchableOpacity, Text, Image, FlatList, Dimensions, Alert, Button } from "react-native";
+import { View, TextInput, TouchableOpacity, Text, Image, FlatList, Dimensions, Alert, Button, PanResponder } from "react-native";
 import React, { useState, useEffect } from "react";
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
 import { FontAwesome, FontAwesome6, FontAwesome5 } from "@expo/vector-icons";
-import { PanResponder } from "react-native";
 import * as Location from "expo-location"; // Importing Expo Location
 import axios from "axios";
 import { GOOGLE_MAPS_API_KEY } from '@env';
@@ -27,13 +26,17 @@ const Main = () => {
   const [isCommuteModalVisible, setIsCommuteModalVisible] = useState(false);
   const [modalHeight, setModalHeight] = useState(200); // Default height, can be dragged
   const [isCommuteGuideVisible, setIsCommuteGuideVisible] = useState(false);
-  const [sliderHeight, setSliderHeight] = useState(250); // Default height
+  // const [sliderHeight, setSliderHeight] = useState(250); // Default height
   const [routeCoordinates, setRouteCoordinates] = useState([]); // Store polyline routes
   const [alternativeRoutes, setAlternativeRoutes] = useState([]);
+  const [detailedRoute, setDetailedRoute] = useState(null);
+  const [isRouteDetailsModalVisible, setIsRouteDetailsModalVisible] = useState(false); // For route details modal
+
   
 
   // Get real-time location
   useEffect(() => {
+    console.log("Detailed Route Data:", detailedRoute);
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync(); // Request permission to access location
       if (status !== "granted") {
@@ -46,7 +49,7 @@ const Main = () => {
       });
       setLocation(userLocation.coords); // Save the real-time location coordinates
     })();
-  }, []);
+  }, [detailedRoute]);
 
   // Handle search for places using Google Places API
   const handleSearch = (text) => {
@@ -245,7 +248,7 @@ const calculateFare = async () => {
       const { dy } = gestureState;
   
       // Adjusting modal height dynamically while dragging
-      let newHeight = modalHeight - dy;
+      let newHeight = modalHeight + dy;
       if (newHeight < height * 0.3) newHeight = height * 0.3; // Prevent shrinking too much
       if (newHeight > height * 0.7) newHeight = height * 0.7; // Prevent covering full screen
   
@@ -368,6 +371,17 @@ const decodePolyline = (encoded) => {
   }
 };
 
+
+const handleRouteSelect = (item) => {
+  console.log("Selected Route:", item); // Debugging log to confirm route selection
+  setRouteCoordinates(item.polyline);
+  getCommuteSteps(item.steps);
+  setDetailedRoute(item); // Set the selected route's details
+  setIsCommuteModalVisible(false); // Close the first modal (route selection)
+  setIsRouteDetailsModalVisible(true); // Open the second modal (route details)
+};
+
+
   return (
     <View className="flex-1">
       {/* Map Background */}
@@ -385,17 +399,6 @@ const decodePolyline = (encoded) => {
         onPress={(event) => handleMapPress(event.nativeEvent.coordinate)} // New feature
       >
 
-        {/* {selectedLocation && (
-          <Marker
-            coordinate={{
-              latitude: selectedLocation.latitude,
-              longitude: selectedLocation.longitude,
-            }}
-            title={selectedLocation.name}
-            description={selectedLocation.address}
-          />
-        )} */}
-
 {selectedLocation?.latitude && selectedLocation?.longitude ? (
   <Marker
     coordinate={{
@@ -405,19 +408,6 @@ const decodePolyline = (encoded) => {
     title="Start"
   />
 ) : null}
-
-
-        {/* {destinationLocation && (
-          <Marker
-            coordinate={{
-              latitude: destinationLocation.latitude,
-              longitude: destinationLocation.longitude,
-            }}
-            title={destinationLocation.name}
-            description={destinationLocation.address}
-            pinColor="green"
-          />
-        )} */}
 
 {destinationLocation?.latitude && destinationLocation?.longitude ? (
   <Marker
@@ -429,22 +419,7 @@ const decodePolyline = (encoded) => {
   />
 ) : null}
 
-
-{places.map((place, index) => (
-    place.geometry && place.geometry.location ? ( // Ensure geometry exists
-        <Marker
-            key={index}
-            coordinate={{
-                latitude: place.geometry.location.lat,
-                longitude: place.geometry.location.lng,
-            }}
-            title={place.name}
-            description={place.formatted_address}
-        />
-    ) : null
-))}
-
-{/* Draw Route Lines */}
+  {/* Draw Route Lines */}
 {routeCoordinates.length > 0 &&
   routeCoordinates.map((encodedPolyline, index) => (
     <Polyline
@@ -453,26 +428,7 @@ const decodePolyline = (encoded) => {
       strokeWidth={4}
       strokeColor={index === 0 ? "#00DF82" : index === 1 ? "#FFA500" : "#FF4500"}
     />
-  ))}
-
-
-
-  {/* Show Transport Icons Along Route */}
-  {/* {commuteSteps.map((step, index) =>
-  step.details && step.details.icon ? (
-    <Marker
-      key={index}
-      coordinate={{
-        latitude: step.details.from.lat,
-        longitude: step.details.from.lng,
-      }}
-      title={step.details.line}
-    >
-      <Image source={{ uri: step.details.icon }} style={{ width: 30, height: 30 }} />
-    </Marker>
-  ) : null
-)} */}
-
+))}
 {commuteSteps.map((step, index) =>
   step.details &&
   step.details.from?.lat &&
@@ -492,72 +448,60 @@ const decodePolyline = (encoded) => {
       </MapView>
 
       {isCommuteModalVisible && (
-  <View
-    style={{
-      position: "absolute",
-      bottom: 0,
-      width: "100%",
-      backgroundColor: "#fff",
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-      padding: 20,
-      maxHeight: height * 0.7, // Limits to 70% of screen height
-      minHeight: height * 0.3, // Minimum height (prevents overlap)
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.3,
-      shadowRadius: 4,
-      zIndex: 5,
-    }}
-  >
-    {/* Draggable Indicator */}
-    <View
-      {...panResponder.panHandlers}
-      style={{
-        alignSelf: "center",
-        width: 50,
-        height: 5,
-        backgroundColor: "#888",
-        borderRadius: 5,
-        marginBottom: 10,
-      }}
-    />
-
-    <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>Select a Route</Text>
-
-    {/* Scrollable List of Routes */}
-    <FlatList
-      data={alternativeRoutes}
-      keyExtractor={(item) => item.id.toString()}
-      style={{ flexGrow: 1 }} // Ensures full scrolling
-      contentContainerStyle={{ paddingBottom: 20 }} // Avoids cutting off last item
-      renderItem={({ item }) => (
-        <TouchableOpacity
+      <View
+        style={{
+          ...modalStyle, top: modalHeight,
+          position: "absolute",
+          bottom: 40,
+          width: "100%",
+          backgroundColor: "#fff",
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          padding: 20,
+          maxHeight: height * 0.7,
+          minHeight: height * 0.3,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.3,
+          shadowRadius: 4,
+          zIndex: 5,
+          top: modalHeight, // Apply dynamic height based on the pan responder
+        }}
+        >
+        {/* Draggable Indicator */}
+        <View
+          {...panResponder.panHandlers}
           style={{
-            backgroundColor: "#F5F5F5",
-            borderRadius: 10,
-            padding: 15,
+            alignSelf: "center",
+            width: 50,
+            height: 12,
+            backgroundColor: "#888",
+            borderRadius: 5,
             marginBottom: 10,
           }}
-          onPress={() => {
-            setRouteCoordinates(item.polyline);
-            setCommuteSteps(item.steps);
-            setIsCommuteModalVisible(false);
-          }}
-        >
-          <Text style={{ fontWeight: "bold" }}>🚍 {item.summary}</Text>
-          <Text>⏳ Duration: {item.duration}</Text>
-          <Text>💰 Estimated Fare: {item.fare}</Text>
-        </TouchableOpacity>
-      )}
-    />
-  </View>
-)}
+        />
 
+        <Text style={{ fontSize: 16, fontWeight: "bold", marginBottom: 10 }}>
+          Select a Route
+        </Text>
 
-
-    {/* Close Button */}
-    <TouchableOpacity
+        {/* Scrollable List of Routes */}
+        <FlatList
+          data={alternativeRoutes}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() => {
+                handleRouteSelect(item); // Save the selected route details for later display
+              }}
+              
+            >
+              <Text>🚍 {item.summary}</Text>
+              <Text>⏳ Duration: {item.duration}</Text>
+              <Text>💰 Estimated Fare: {item.fare}</Text>
+            </TouchableOpacity>
+          )}
+        />
+        <TouchableOpacity
       style={{
         position: "absolute",
         top: 10,
@@ -570,6 +514,55 @@ const decodePolyline = (encoded) => {
     >
       <Text style={{ color: "white", fontWeight: "bold" }}>✖</Text>
     </TouchableOpacity>
+      </View>
+    )}
+
+{/* {detailedRoute && detailedRoute.steps && detailedRoute.steps.length > 0 && ( */}
+{isRouteDetailsModalVisible && detailedRoute && detailedRoute.steps && detailedRoute.steps.length > 0 && (
+  <View style={{ ...modalStyle, top: modalHeight }}>
+    {/* Draggable Indicator */}
+    <View
+      {...panResponder.panHandlers}
+      style={{
+        alignSelf: "center",
+        width: 50,
+        height: 12,
+        backgroundColor: "#888",
+        borderRadius: 5,
+        marginBottom: 10,
+      }}
+    />
+    <Text style={{ fontSize: 18, fontWeight: "bold" }}>Route Details:</Text>
+    {detailedRoute.steps && detailedRoute.steps.map((step, index) => (
+      <View key={index} style={{ marginBottom: 10 }}>
+        <Text>{step.instruction}</Text>
+        {step.details && (
+          <>
+            <Text>🚇 Line: {step.details.line}</Text>
+            <Text>🚍 Vehicle: {step.details.vehicle}</Text>
+            <Text>💵 Fare: {step.details.fare}</Text>
+            <Text>⏱ Duration: {step.details.duration}</Text>
+          </>
+        )}
+      </View>
+    ))}
+    {/* Close Button */}
+    <TouchableOpacity
+      style={{
+        position: "absolute",
+        top: 10,
+        right: 20,
+        backgroundColor: "#4E5D6C",
+        padding: 8,
+        borderRadius: 20,
+      }}
+      onPress={() => setIsRouteDetailsModalVisible(false)}
+    >
+      <Text style={{ color: "white", fontWeight: "bold" }}>✖</Text>
+    </TouchableOpacity>
+  </View>
+)}
+
 
       {/* Bottom Search Section */}
       <View
@@ -689,5 +682,25 @@ const decodePolyline = (encoded) => {
     </View>
   );
 };
+
+
+
+const modalStyle = {
+  position: "absolute",
+  bottom: 40,
+  width: "100%",
+  backgroundColor: "#fff",
+  borderTopLeftRadius: 20,
+  borderTopRightRadius: 20,
+  padding: 20,
+  maxHeight: height * 0.7,
+  minHeight: height * 0.3,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.3,
+  shadowRadius: 4,
+  zIndex: 5,
+};
+
 
 export default Main;
