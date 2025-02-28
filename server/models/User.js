@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const userSchema = new mongoose.Schema({
@@ -16,6 +16,10 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         minlength: [6, 'Your password must be longer than 6 characters'],
+    },
+    role: {
+        type: Number,
+        default: 1, // 0 - Admin, 1 - User
     },
 });
 

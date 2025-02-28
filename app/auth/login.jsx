@@ -25,11 +25,16 @@ export default function LoginScreen() {
       .then(res => {
         console.log("Response from server: ", res.data);
         if (res.data.status === "ok") {
-          console.log("Login successful! Token: ", res.data.data);
+          const { token, role } = res.data.data;
+          console.log("Login successful! Token: ", token, " Role: ", role);
           Alert.alert("Login successful!");
-          AsyncStorage.setItem("token", res.data.data);
+          AsyncStorage.setItem("token", token);
 
-          router.push("/Screen/main");
+          if (role === 0) {
+            router.push("/admin/dashboard");  // Redirect admin to dashboard
+          } else {
+            router.push("/Screen/main");  // Redirect normal user
+          }
         } else {
           console.log("Login failed: ", res.data.data);
         }
@@ -37,6 +42,17 @@ export default function LoginScreen() {
       .catch(error => {
         console.error("Login error: ", error.response ? error.response.data : error.message);
       });
+  }
+  
+
+  // ✅ Function to Login as User (Redirect to /main.jsx)
+  function LoginAsUser() {
+    router.push("../Screen/main"); 
+  }
+
+  // ✅ Function to Login as Admin (Redirect to /dashboard.jsx)
+  function LoginAsAdmin() {
+    router.push("../admin/dashboard");
   }
   
 
@@ -74,7 +90,7 @@ export default function LoginScreen() {
           placeholderTextColor="#4E5D6C"
           secureTextEntry
           className="ml-3 flex-1 text-black"
-          onChange={e => setPassword(e.nativeEvent.text)}
+          onChange={e => setPassword(e.nativeEvent.text.trim())}
         />
       </View>
 
@@ -85,6 +101,22 @@ export default function LoginScreen() {
       >
         <Text className="text-center text-white text-lg font-semibold" backgroundColor="#030F0F"
         style={{ color: '#00DF82'}}>Login</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity 
+        className="w-full bg-black py-3 rounded-full mb-4 shadow-md"
+        onPress={() => LoginAsUser()} 
+      >
+        <Text className="text-center text-white text-lg font-semibold" backgroundColor="#030F0F"
+        style={{ color: '#00DF82'}}> User Interface</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity 
+        className="w-full bg-black py-3 rounded-full mb-4 shadow-md"
+        onPress={() => LoginAsAdmin()} 
+      >
+        <Text className="text-center text-white text-lg font-semibold" backgroundColor="#030F0F"
+        style={{ color: '#00DF82'}}> Admin Dashboard</Text>
       </TouchableOpacity>
 
       {/* OR Separator */}
