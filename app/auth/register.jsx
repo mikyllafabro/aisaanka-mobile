@@ -60,14 +60,14 @@ export default function RegisterScreen() {
       contentContainerStyle={{ flexGrow: 1 }}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="always">
-      <View className="flex-1 items-center justify-center bg-[#4E5D6C] px-6">
+      <View className="flex-1 items-center justify-center bg-[#0b617e] px-6">
         <Image
           source={require("../../assets/images/logo.png")}
-          style={{ width: 100, height: 100, marginBottom: 10 }}
+          style={{ width: 200, height: 200, marginBottom: -20, marginTop: -50 }}
           resizeMode="contain"
         />
 
-        <Text className="text-white text-3xl font-bold mb-6">Register</Text>
+        <Text className="text-white text-3xl font-bold mb-6">Create Account</Text>
 
         <View className="w-full bg-white flex-row items-center px-4 py-3 rounded-full mb-4 shadow-md">
           <FontAwesome name="user" size={25} color="#4E5D6C" />
@@ -150,11 +150,12 @@ export default function RegisterScreen() {
           </Text>
         )}
         <TouchableOpacity
-          className="w-full bg-black py-3 rounded-full mb-4 shadow-md"
+          className="w-full py-3 rounded-full mb-4 shadow-md"
+          style={{ backgroundColor: "#0b998f" }}
           onPress={handleSubmit}  // Call the handleSubmit directly here
         >
-          <Text className="text-center text-white text-lg font-semibold">
-            Create Account
+          <Text className="text-center text-white text-lg font-semibold"  style={{ color: '#fff' }}>
+            Sign Up
           </Text>
         </TouchableOpacity>
 
@@ -165,26 +166,27 @@ export default function RegisterScreen() {
           <View className="flex-1 h-[1px] bg-white opacity-50" />
         </View>
 
-        <TouchableOpacity className="w-full bg-white py-3 rounded-full flex-row items-center justify-center shadow-md">
-          <Image
-            source={{
-              uri: "https://upload.wikimedia.org/wikipedia/commons/0/09/Google_favicon_2015.png",
-            }}
-            style={{ width: 24, height: 24, marginRight: 12 }}
-          />
-          <Text className="text-black text-lg font-semibold">Sign Up with Google</Text>
-        </TouchableOpacity>
+         {/* Google Login Button */}
+      <TouchableOpacity 
+        className="w-full bg-white py-3 rounded-full flex-row items-center justify-center shadow-md" 
+        style={{ backgroundColor: "#fff" }}
+      >
+        <FontAwesome name="google" size={24} color="#0b998f" style={{ marginRight: 12 }} />
+        <Text className="text-lg font-semibold" style={{ color: '#0b617e' }}>
+          Login with Google
+        </Text>
+      </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.push("/auth/login")} className="mt-4">
           <Text className="text-white text-sm">
-            Already have an account? <Text className="text-blue-300 font-semibold">Log In</Text>
+            Already have an account? <Text style={{ color: '#0b998f' }} className="font-semibold">Log In</Text>
           </Text>
         </TouchableOpacity>
 
         <Text className="text-white text-xs text-center mt-6 leading-5">
           By continuing you agree to{" "}
-          <Text className="text-blue-300">Terms of Service</Text> and{" "}
-          <Text className="text-blue-300">Privacy Policy</Text>
+          <Text style={{ color: '#0b998f' }}>Terms of Service</Text> and{" "}
+          <Text style={{ color: '#0b998f' }}>Privacy Policy</Text>
         </Text>
       </View>
     </ScrollView>

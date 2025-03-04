@@ -12,9 +12,8 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-
   function handleSubmit() {
-    console.log(email, password);  // Make sure email and password are correctly set.
+    console.log(email, password); 
     const userData = {
       email: email,
       password,
@@ -31,9 +30,9 @@ export default function LoginScreen() {
           AsyncStorage.setItem("token", token);
 
           if (role === 0) {
-            router.push("/admin/dashboard");  // Redirect admin to dashboard
+            router.push("/admin/dashboard");
           } else {
-            router.push("/Screen/main");  // Redirect normal user
+            router.push("/Screen/main");
           }
         } else {
           console.log("Login failed: ", res.data.data);
@@ -43,33 +42,28 @@ export default function LoginScreen() {
         console.error("Login error: ", error.response ? error.response.data : error.message);
       });
   }
-  
 
-  // ✅ Function to Login as User (Redirect to /main.jsx)
   function LoginAsUser() {
     router.push("../Screen/main"); 
   }
 
-  // ✅ Function to Login as Admin (Redirect to /dashboard.jsx)
   function LoginAsAdmin() {
     router.push("../admin/dashboard");
   }
   
-
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps={"always"}>
-    <View className="flex-1 items-center justify-center bg-[#4E5D6C] px-6"
-      style={{ backgroundColor:"#03624C" }}>
+    <View className="flex-1 items-center justify-center bg-[#0b617e] px-6">
       
       {/* Logo */}
       <Image 
         source={require("../../assets/images/logo.png")}  
-        style={{ width: 80, height: 80, marginBottom: 10 }}
+        style={{ width: 200, height: 200, marginBottom: -20, marginTop: -50 }}
         resizeMode="contain"
       />
 
       {/* App Name */}
-      <Text className="text-white text-3xl font-bold mb-8">Ai SaanKa?</Text>
+      <Text className="text-white text-3xl font-bold mb-8">Sign In</Text>
 
       {/* Email Input */}
       <View className="w-full bg-white flex-row items-center px-4 py-3 rounded-full mb-4 shadow-md">
@@ -94,29 +88,30 @@ export default function LoginScreen() {
         />
       </View>
 
-      {/* Sign In Button (Navigates to Main) */}
+      {/* Sign In Button */}
       <TouchableOpacity 
-        className="w-full bg-black py-3 rounded-full mb-4 shadow-md"
+        className="w-full py-3 rounded-full mb-4 shadow-md"
+        style={{ backgroundColor: "#0b998f" }}
         onPress={() => handleSubmit()} 
       >
-        <Text className="text-center text-white text-lg font-semibold" backgroundColor="#030F0F"
-        style={{ color: '#00DF82'}}>Login</Text>
+        <Text className="text-center text-white text-lg font-semibold" 
+        style={{ color: '#fff'}}>Sign In</Text>
       </TouchableOpacity>
 
       <TouchableOpacity 
         className="w-full bg-black py-3 rounded-full mb-4 shadow-md"
         onPress={() => LoginAsUser()} 
       >
-        <Text className="text-center text-white text-lg font-semibold" backgroundColor="#030F0F"
-        style={{ color: '#00DF82'}}> User Interface</Text>
+        <Text className="text-center text-white text-lg font-semibold" 
+        style={{ color: '#0b998f'}}> UI </Text>
       </TouchableOpacity>
 
       <TouchableOpacity 
         className="w-full bg-black py-3 rounded-full mb-4 shadow-md"
         onPress={() => LoginAsAdmin()} 
       >
-        <Text className="text-center text-white text-lg font-semibold" backgroundColor="#030F0F"
-        style={{ color: '#00DF82'}}> Admin Dashboard</Text>
+        <Text className="text-center text-white text-lg font-semibold" 
+        style={{ color: '#0b998f'}}> Admin</Text>
       </TouchableOpacity>
 
       {/* OR Separator */}
@@ -127,30 +122,27 @@ export default function LoginScreen() {
       </View>
 
       {/* Google Login Button */}
-      <TouchableOpacity className="w-full bg-white py-3 rounded-full flex-row items-center justify-center shadow-md" style={{ backgroundColor: "#00DF82" }}>
-        <Image 
-          source={{ uri: "https://upload.wikimedia.org/wikipedia/commons/0/09/Google_favicon_2015.png" }}  
-          style={{ width: 24, height: 24, marginRight: 12 }}
-        />
-        <Text className="text-lg font-semibold"
-        style={{ color: '#030F0F'}}>Login with Google</Text>
-      </TouchableOpacity>
-
-      {/* Sign Up Link */}
-      <TouchableOpacity onPress={() => router.push("/auth/register")} className="mt-4">
-        <Text className="text-white text-sm">
-          Don't have an account? <Text className="text-blue-300 font-semibold">Sign Up</Text>
+      <TouchableOpacity 
+        className="w-full bg-white py-3 rounded-full flex-row items-center justify-center shadow-md" 
+      >
+        <FontAwesome name="google" size={24} color="#0b998f" style={{ marginRight: 12 }} />
+        <Text className="text-lg font-semibold" style={{ color: '#0b617e' }}>
+          Login with Google
         </Text>
       </TouchableOpacity>
 
-      {/* Terms & Privacy Policy */}
+      <TouchableOpacity onPress={() => router.push("/auth/register")} className="mt-4">
+        <Text className="text-white text-sm">
+          Don't have an account? <Text style={{ color: '#0b998f' }} className="font-semibold">Sign Up</Text>
+        </Text>
+      </TouchableOpacity>
+
       <Text className="text-white text-xs text-center mt-6 leading-5">
         By continuing you agree to{" "}
-        <Text className="text-blue-300">Terms of Service</Text> and{" "}
-        <Text className="text-blue-300">Privacy Policy</Text>
+        <Text style={{ color: '#0b998f' }}>Terms of Service</Text> and{" "}
+        <Text style={{ color: '#0b998f' }}>Privacy Policy</Text>
       </Text>
     </View>
   </ScrollView>
   );
-
 }
