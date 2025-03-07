@@ -4,6 +4,7 @@ import { Feather, FontAwesome } from "@expo/vector-icons";
 import { useState } from "react";
 import axios from "axios";
 import { BASE_URL } from "@env";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -28,7 +29,9 @@ export default function RegisterScreen() {
       .then(res => {console.log(res.data)
         if (res.data.status === "ok") {
           alert("Registered successfully");
-          router.push("/auth/login");
+          // Store email for OTP verification
+          AsyncStorage.setItem("emailForOTP", email);
+          router.push("./OTPVerification");
         } else {
           alert(JSON.stringify(res.data));
         }

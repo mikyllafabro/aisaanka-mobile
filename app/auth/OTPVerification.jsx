@@ -1,17 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "expo-router";
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Swal from "sweetalert2";
+import { BASE_URL } from "@env";
 
 const OTPVerification = () => {
+  const router = useRouter();
   const navigation = useNavigation();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]); // 6-digit OTP
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [email, setEmail] = useState("");
-
-  const API_URL = process.env.EXPO_PUBLIC_API_URL;
+  
+  // Create an array of refs for the OTP inputs
+  const otpRefs = useRef([]);
+  otpRefs.current = Array(6).fill().map((_, i) => otpRefs.current[i] || React.createRef());
 
   useEffect(() => {
     const fetchEmail = async () => {
@@ -19,11 +24,12 @@ const OTPVerification = () => {
       if (storedEmail) {
         setEmail(storedEmail);
       } else {
-        navigation.navigate("Register"); // Redirect if no email is found
+        router.push("/auth/register");
+        //navigation.navigate("Register"); //Redirect if no email is found
       }
     };
     fetchEmail();
-  }, [navigation]);
+  }, [router]);
 
   const handleChange = (index, value) => {
     if (/^[0-9]?$/.test(value)) {
@@ -31,100 +37,85 @@ const OTPVerification = () => {
       newOtp[index] = value;
       setOtp(newOtp);
 
+      // Focus on the next input if the current one is filled
       if (value !== "" && index < 5) {
-        const nextInput = `otp-${index + 1}`;
-        const nextInputRef = this[nextInput];
-        if (nextInputRef) {
-          nextInputRef.focus();
-        }
+        otpRefs.current[index + 1].current.focus();
       }
     }
   };
 
   const handleSubmit = async () => {
-    console.log("🔍 Button Clicked: Verifying OTP...");
-
     if (otp.some((digit) => digit === "")) {
-      console.error("❌ Error: OTP fields are empty.");
-      setError("Please enter all six digits.");
-      Swal.fire("Error", "Please enter all six digits.", "error");
-      return;
+        setError("Please enter all six digits.");
+        alert("Error", "Please enter all six digits.", "error");
+        return;
     }
 
     setLoading(true);
     setError("");
-    console.log("📡 Sending OTP to Backend...");
 
     try {
-      const response = await fetch(`${API_URL}/auth/verify-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp: otp.join("") }),
-      });
-
-      console.log("🔍 Raw Response:", response);
-
-      const data = await response.json();
-      console.log("✅ Response Data:", data);
-
-      setLoading(false);
-
-      if (response.ok) {
-        Swal.fire("Success!", "OTP Verified Successfully!", "success").then(() => {
-          AsyncStorage.removeItem("emailForOTP"); // ✅ Clear stored email after verification
-          navigation.navigate("Login"); // ✅ Redirect user to login
+        const response = await fetch(`${BASE_URL}/verify-otp`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, otp: otp.join("") }),
         });
-      } else {
-        setError(data.message);
-        Swal.fire("Error", data.message, "error");
-      }
+
+        const data = await response.json();
+
+        console.log("Response data:", data);
+
+        setLoading(false);
+
+        if (response.ok && data.message === "OTP verified successfully") {
+            alert("Success!", "OTP Verified Successfully!", "success");
+            AsyncStorage.removeItem("emailForOTP");
+            router.push("/auth/login");
+                // navigation.navigate("Login");
+        } else {
+            setError(data.message);
+            alert("Error", data.message, "error");
+        }
     } catch (error) {
-      console.error("❌ Fetch Error:", error);
-      setLoading(false);
-      setError("Something went wrong. Please try again.");
-      Swal.fire("Error", "Something went wrong. Please try again.", "error");
+        setLoading(false);
+        setError("Something went wrong. Please try again.");
+        alert("Error", "Something went wrong. Please try again.", "error");
     }
-  };
+};
 
   const handleResendOtp = async () => {
     setLoading(true);
     setError("");
-
+  
     try {
-      const response = await fetch(`${API_URL}/auth/resend-otp`, {
+      const response = await fetch(`${BASE_URL}/resend-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-
+  
       const data = await response.json();
       setLoading(false);
-
+  
       console.log("📡 Resend OTP Response:", data);
-
+  
       // Check if response is successful
       if (response.ok && data.message === "A new OTP has been sent to your email.") {
-        Swal.fire("Success!", "A new OTP has been sent to your email.", "success");
+        alert("Success!", "A new OTP has been sent to your email.", "success");
       } else {
         setError(data.message);
-        Swal.fire("Error", data.message, "error");
+        alert("Error", data.message, "error");
       }
     } catch (error) {
       console.error("❌ Fetch Error:", error);
       setLoading(false);
       setError("Failed to resend OTP. Please try again.");
-      Swal.fire("Error", "Failed to resend OTP. Please try again.", "error");
+      alert("Error", "Failed to resend OTP. Please try again.", "error");
     }
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Admin Dashboard</Text>
-        <TouchableOpacity style={styles.exportButton}>
-          <Text style={styles.exportButtonText}>Export</Text>
-        </TouchableOpacity>
-      </View>
       <Text style={styles.subtitle}>Verify Your Email</Text>
       <Text style={styles.description}>
         Enter the 6-digit OTP sent to <Text style={styles.email}>{email}</Text>
@@ -134,7 +125,7 @@ const OTPVerification = () => {
         {otp.map((digit, index) => (
           <TextInput
             key={index}
-            ref={(input) => (this[`otp-${index}`] = input)}
+            ref={otpRefs.current[index]} // Use the ref for each OTP input
             style={styles.otpInput}
             value={digit}
             onChangeText={(value) => handleChange(index, value)}
@@ -164,27 +155,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     backgroundColor: "#F9FAF5",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#0b617e",
-  },
-  exportButton: {
-    backgroundColor: "#0b617e",
-    padding: 10,
-    borderRadius: 5,
-  },
-  exportButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
   },
   subtitle: {
     fontSize: 24,

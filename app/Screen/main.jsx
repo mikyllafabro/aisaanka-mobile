@@ -7,6 +7,7 @@ import axios from "axios";
 import { GOOGLE_MAPS_API_KEY } from '@env';
 import getCommuteSteps from "./CommuteGuide";
 import polyline from "@mapbox/polyline";
+import Profile from "./profile";
 
 console.log("Loaded API Key:", GOOGLE_MAPS_API_KEY);
 
@@ -31,8 +32,11 @@ const Main = () => {
   const [alternativeRoutes, setAlternativeRoutes] = useState([]);
   const [detailedRoute, setDetailedRoute] = useState(null);
   const [isRouteDetailsModalVisible, setIsRouteDetailsModalVisible] = useState(false); // For route details modal
+  const [sidebarVisible, setSidebarVisible] = useState(false);
 
-  
+  const toggleSidebar = () => {
+    setSidebarVisible(!sidebarVisible);
+  };
 
   // Get real-time location
   useEffect(() => {
@@ -383,7 +387,27 @@ const handleRouteSelect = (item) => {
 
 
   return (
+    
     <View className="flex-1">
+      {/* Button to toggle sidebar */}
+      <TouchableOpacity onPress={toggleSidebar} style={{ position: "absolute", top: 40, left: 20, zIndex: 10 }}>
+        <FontAwesome name="bars" size={30} color="black" />
+      </TouchableOpacity>
+
+      {/* Sidebar */}
+      {sidebarVisible && (
+        <View style={{
+          position: "absolute", top: 0, left: 0, bottom: 0, width: 250, backgroundColor: "#fff", padding: 20, zIndex: 5,
+          shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4
+        }}>
+          <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 20 }}>Sidebar</Text>
+          
+          {/* Profile Component */}
+          <Profile />
+          
+          {/* Add other sidebar contents here */}
+        </View>
+      )}
       {/* Map Background */}
       <MapView
         provider={PROVIDER_GOOGLE}

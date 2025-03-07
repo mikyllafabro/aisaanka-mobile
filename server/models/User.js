@@ -21,6 +21,8 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 1, // 0 - Admin, 1 - User
     },
+    otp: String,
+    otpExpires: Date,
 });
 
 // Middleware to hash password before saving the user

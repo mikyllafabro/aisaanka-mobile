@@ -64,6 +64,16 @@ const loginUser = async (req, res) => {
     }
 };
 
+const logout = (req, res) => {
+    if (req.session) {
+        req.session.destroy(err => {
+            res.status(err ? 500 : 200).json(err ? "Failed to logout" : "Logged out successfully");
+        });
+    } else {
+        res.status(400).json({ error: "No session found" });
+    }
+};
+
 const verifyOtp = async (req, res) => {
     try {
         const { email, otp } = req.body;
@@ -110,9 +120,67 @@ const resendOtp = async (req, res) => {
     }
 };
 
+const getProfile = async (req, res) => {
+    try {
+        // ✅ Get token from request headers
+        const token = req.headers.authorization?.split(" ")[1];
+
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
+        }
+
+        // ✅ Verify the token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        // ✅ Find user in the database (excluding password)
+        const user = await UserModel.findById(decoded.id).select("-password");
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching profile" });
+    }
+};
+
+const updateProfile = async (req, res) => {
+    try {
+        const { username, name, email, currentPassword, newPassword } = req.body;
+        const user = await UserModel.findById(req.user.id);
+
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+        // If updating password, verify current password
+        if (newPassword) {
+            const isMatch = await bcrypt.compare(currentPassword, user.password);
+            if (!isMatch) {
+                return res.status(400).json({ success: false, message: "Incorrect current password" });
+            }
+            user.password = await bcrypt.hash(newPassword, 10);
+        }
+
+        // Update user fields
+        user.username = username || user.username;
+        user.name = name || user.name;
+        user.email = email || user.email;
+
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Profile updated successfully", user });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Error updating profile" });
+    }
+};
+
 module.exports = {
     signup,
     loginUser,
+    logout,
     verifyOtp,
     resendOtp,
+    getProfile,
+    updateProfile,
 };
