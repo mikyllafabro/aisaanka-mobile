@@ -4,7 +4,7 @@ const express = require('express');
 const nodemailer = require('nodemailer');
 const app = express();
 const mongoose = require("mongoose");
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const transporter = require('./utils/mailer.js');
@@ -91,26 +91,28 @@ app.post("/register", async (req, res) => {
             return res.status(400).send({ data: "Email already in use" });
         }
 
-        const hashedPassword = await bcrypt.hash(password.trim(), 10);
-
         // Generate OTP
         const otp = generateOtp();  
         console.log("Generated OTP:", otp); // Log the generated OTP
+        console.log("OTP saved to user:", otp); // Log OTP to ensure it's saved
 
-        // Save the OTP with the new user
+        // Registration
+        const hashedPassword = await bcrypt.hash(password.trim(),10); // Ensure password is hashed before saving it
+        console.log("Hashed Password:", hashedPassword); // Log to verify
+
+        // Save user with hashed password
         const newUser = await User.create({
             username,
             email: email.toLowerCase(),
-            password: hashedPassword,
+            password: hashedPassword,  // Store the hashed password
             role: 1,
-            otp,  // Make sure OTP is saved during user creation
-        });
+            otp,  // OTP storage
+});
 
-        console.log("OTP saved to user:", otp); // Log OTP to ensure it's saved
 
         // Send OTP email
         await sendOtpEmail(email, otp);  // Send OTP email
-
+        await User.updateOne({ email: email.toLowerCase() }, { otp });
         res.status(201).send({ status: "ok", data: "User created. OTP sent." });
     } catch (error) {
         console.error("Error during registration:", error);
@@ -120,6 +122,42 @@ app.post("/register", async (req, res) => {
 
 
 // Login Route
+// Register Route - Ensures password is hashed and saved correctly
+app.post("/register", async (req, res) => {
+    const { username, email, password } = req.body;
+
+    try {
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
+        if (existingUser) {
+            return res.status(400).send({ data: "Email already in use" });
+        }
+
+        const otp = generateOtp();  
+        console.log("Generated OTP:", otp); 
+
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password.trim(), 10); // Ensure password is trimmed
+        console.log("Hashed Password (for storage):", hashedPassword); // Log hashed password to ensure proper hashing
+
+        // Save the user
+        const newUser = await User.create({
+            username,
+            email: email.toLowerCase(),
+            password: hashedPassword, // Store the hashed password
+            role: 1,
+            otp,
+        });
+
+        await sendOtpEmail(email, otp);
+        await User.updateOne({ email: email.toLowerCase() }, { otp });
+        res.status(201).send({ status: "ok", data: "User created. OTP sent." });
+    } catch (error) {
+        console.error("Error during registration:", error);
+        res.status(500).send({ status: "error", data: "Registration failed" });
+    }
+});
+
+// Login Route - Ensure password is compared correctly
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
@@ -128,26 +166,25 @@ app.post("/login", async (req, res) => {
     }
 
     try {
-        // Make email search case-insensitive
+        // Find the user by email
         const oldUser = await User.findOne({ email: email.toLowerCase() });
 
         if (!oldUser) {
             return res.status(400).send({ data: "User doesn't exist" });
         }
 
-        console.log("Entered Password (Before Trim):", password.trim());
         console.log("Entered Password (After Trim):", password.trim());
-        console.log("Stored Hashed Password:", oldUser.password);        
+        console.log("Stored Hashed Password:", oldUser.password);
 
-        // Check if the entered password matches the stored hashed password
-        const isPasswordCorrect = await bcrypt.compare(password.toString(), oldUser.password);
-        console.log("Password comparison result:", isPasswordCorrect);
+        // Use bcrypt.compare to check if the entered password matches the stored hashed password
+        const isPasswordCorrect = await bcrypt.compare(password.trim(), oldUser.password); // Trim password during comparison
+        console.log("Password comparison result (bcrypt.compare):", isPasswordCorrect);
 
         if (!isPasswordCorrect) {
             return res.status(400).send({ status: "error", data: "Invalid credentials" });
         }
 
-        // Generate JWT Token
+        // Generate JWT Token if password matches
         const token = jwt.sign({ email: oldUser.email, role: oldUser.role }, JWT_SECRET);
         console.log("Generated JWT token:", token);
 
@@ -157,6 +194,8 @@ app.post("/login", async (req, res) => {
         return res.status(500).send({ status: "error", data: "Login failed" });
     }
 });
+
+
 
 app.post("/verify-otp", async (req, res) => {
     const { email, otp } = req.body;

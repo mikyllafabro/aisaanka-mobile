@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const userSchema = new mongoose.Schema({
@@ -24,17 +24,5 @@ const userSchema = new mongoose.Schema({
     otp: String,
     otpExpires: Date,
 });
-
-// Middleware to hash password before saving the user
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) return next(); // Only hash password if it's modified
-    this.password = await bcrypt.hash(this.password, 10); // Hash password with salt rounds
-    next();
-});
-
-// Method to compare entered password with hashed password
-userSchema.methods.comparePassword = async function (enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
-};
 
 module.exports = mongoose.model('User', userSchema);
