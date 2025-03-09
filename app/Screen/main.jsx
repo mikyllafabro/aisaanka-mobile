@@ -425,6 +425,23 @@ const handleEndJourney = () => {
   ]);
 };
 
+const trafficStatus = (trafficLevel) => {
+  // This function returns the appropriate color and text based on the traffic level
+  let color, statusText;
+
+  if (trafficLevel === "heavy") {
+    color = "#EA4335";  // Red
+    statusText = "Heavy Traffic";
+  } else if (trafficLevel === "moderate") {
+    color = "#FBBC04";  // Orange
+    statusText = "Moderate Traffic";
+  } else {
+    color = "#34A853";  // Green
+    statusText = "Low Traffic";
+  }
+
+  return { color, statusText };
+};
 
   return (
     
@@ -608,6 +625,7 @@ const handleEndJourney = () => {
       )}
     </View>
 
+
 {/* {detailedRoute && detailedRoute.steps && detailedRoute.steps.length > 0 && ( */}
 {isRouteDetailsModalVisible && detailedRoute && detailedRoute.steps && detailedRoute.steps.length > 0 && (
   <View style={{ ...modalStyle, top: modalHeight }}>
@@ -633,6 +651,29 @@ const handleEndJourney = () => {
             <Text>🚍 Vehicle: {step.details.vehicle}</Text>
             <Text>💵 Fare: {step.details.fare}</Text>
             <Text>⏱ Duration: {step.details.duration}</Text>
+          {/* Traffic Analysis Section */}
+          <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginTop: 10,
+              padding: 10,
+              borderWidth: 1,
+              borderRadius: 20,
+              borderColor: '#ccc',
+            }}>
+              <View
+                style={{
+                  width: 15,
+                  height: 15,
+                  borderRadius: 15 / 2,
+                  backgroundColor: trafficStatus(step.details.trafficLevel).color, // Dynamic color based on traffic level
+                  marginRight: 10,
+                }}
+              />
+              <Text style={{ fontWeight: 'bold' }}>
+                {trafficStatus(step.details.trafficLevel).statusText}
+              </Text>
+            </View>
           </>
         )}
       </View>

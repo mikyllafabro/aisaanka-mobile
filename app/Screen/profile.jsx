@@ -19,7 +19,7 @@ export default function Profile() {
 
   const fetchProfile = async () => {
     try {
-      console.log("📡 Fetching user profile...");
+      console.log("Fetching user profile...");
       const token = await AsyncStorage.getItem("token");
 
       if (!token) {
@@ -39,10 +39,11 @@ export default function Profile() {
       }
 
       const data = await response.json();
-      console.log("✅ Profile Data:", data);
+      console.log("Profile Data:", data);
       setProfile(data.data); // Adjusted to access the data object correctly
+      setEditData({ username: data.data.username, email: data.data.email, password: "" });
     } catch (error) {
-      console.error("❌ Error fetching profile:", error);
+      console.error("Error fetching profile:", error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -51,11 +52,12 @@ export default function Profile() {
 
   const handleUpdateProfile = async () => {
     try {
-      console.log("📡 Updating profile...");
+      console.log("Updating profile...");
+      console.log("User Email:", editData.email);
 
       const token = await AsyncStorage.getItem("token");
-
-      const response = await fetch(`${BASE_URL}/update`, {
+  
+      const response = await fetch(`${BASE_URL}/profile/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -68,22 +70,31 @@ export default function Profile() {
           currentPassword,
         }),
       });
-
-      const data = await response.json();
-
+  
+      const responseText = await response.text();  // Read response as text first
+      console.log("Response Text:", responseText);  // Log the raw response
+  
+      let data;
+      try {
+        data = JSON.parse(responseText);  // Try parsing JSON manually
+      } catch (error) {
+        throw new Error("Failed to parse JSON response.");
+      }
+  
       if (!response.ok) {
         throw new Error(data.message || "Profile update failed.");
       }
-
-      console.log("✅ Profile updated:", data);
+  
+      console.log("Profile updated:", data);
       Alert.alert("Success", "Profile updated successfully!");
       setModalOpen(false);
       fetchProfile();
     } catch (error) {
-      console.error("❌ Error updating profile:", error);
+      console.error("Error updating profile:", error);
       Alert.alert("Error", "Error updating profile: " + error.message);
     }
   };
+  
 
   return (
     <View style={styles.container}>
@@ -117,10 +128,11 @@ export default function Profile() {
               onChangeText={(text) => setEditData({ ...editData, username: text })}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: "#f1f1f1" }]}
               placeholder="Email"
               value={editData.email}
-              onChangeText={(text) => setEditData({ ...editData, email: text })}
+              editable={false}
+              
             />
             <TextInput
               style={styles.input}

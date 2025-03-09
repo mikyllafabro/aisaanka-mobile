@@ -82,47 +82,6 @@ const sendOtpEmail = async (email, otp) => {
       console.error('Error sending OTP:', error);
     }
   };
-
-// Register Route
-app.post("/register", async (req, res) => {
-    const { username, email, password } = req.body;
-
-    try {
-        const existingUser = await User.findOne({ email: email.toLowerCase() });
-        if (existingUser) {
-            return res.status(400).send({ data: "Email already in use" });
-        }
-
-        // Generate OTP
-        const otp = generateOtp();  
-        console.log("Generated OTP:", otp); // Log the generated OTP
-        console.log("OTP saved to user:", otp); // Log OTP to ensure it's saved
-
-        // Registration
-        const hashedPassword = await bcrypt.hash(password.trim(),10); // Ensure password is hashed before saving it
-        console.log("Hashed Password:", hashedPassword); // Log to verify
-
-        // Save user with hashed password
-        const newUser = await User.create({
-            username,
-            email: email.toLowerCase(),
-            password: hashedPassword,  // Store the hashed password
-            role: 1,
-            otp,  // OTP storage
-});
-
-
-        // Send OTP email
-        await sendOtpEmail(email, otp);  // Send OTP email
-        await User.updateOne({ email: email.toLowerCase() }, { otp });
-        res.status(201).send({ status: "ok", data: "User created. OTP sent." });
-    } catch (error) {
-        console.error("Error during registration:", error);
-        res.status(500).send({ status: "error", data: "Registration failed" });
-    }
-});
-
-
 // Login Route
 // Register Route - Ensures password is hashed and saved correctly
 app.post("/register", async (req, res) => {
@@ -136,6 +95,7 @@ app.post("/register", async (req, res) => {
 
         const otp = generateOtp();  
         console.log("Generated OTP:", otp); 
+        console.log("OTP saved to user:", otp);
 
         // Hash the password
         const hashedPassword = await bcrypt.hash(password.trim(), 10); // Ensure password is trimmed
@@ -318,6 +278,7 @@ app.post("/userdata", async (req, res) => {
 });
 
 // Update User Profile
+// Inside /profile/update route in server.js
 app.put("/profile/update", async (req, res) => {
     const { username, email, password, currentPassword } = req.body;
     const user = await User.findOne({ email });
@@ -325,40 +286,33 @@ app.put("/profile/update", async (req, res) => {
     try {
         // Check if user exists
         if (!user) {
-            return res.status(404).send({ data: "User not found" });
+            return res.status(404).json({ data: "User not found" });  // Ensure JSON response
         }
 
         // Check if the entered password matches the stored hashed password
         const isPasswordCorrect = await bcrypt.compare(currentPassword.toString(), user.password);
         if (!isPasswordCorrect) {
-            return res.status(400).send({ data: "Incorrect current password" });
+            return res.status(400).json({ data: "Incorrect current password" });  // Ensure JSON response
         }
 
-        // Check if the new email is already in use by another user (if the email has been changed)
-        if (email !== user.email) {
-            const existingUser = await User.findOne({ email });
-            if (existingUser) {
-                return res.status(400).send({ data: "Email already in use" });
-            }
-        }
-
-        // Update the user fields
+        // Update user fields
         user.username = username || user.username;
         user.email = email || user.email;
 
-        // If the password is provided, hash and update it
+        // If password is provided, hash and update it
         if (password) {
             const hashedPassword = await bcrypt.hash(password, 10); // Hash the new password before saving
             user.password = hashedPassword;
         }
 
-        // Save the updated user
+        // Save updated user
         await user.save();
 
-        return res.status(200).send({ status: "ok", data: "Profile updated successfully" });
+        // Respond with JSON
+        res.status(200).json({ status: "ok", data: "Profile updated successfully" });
     } catch (error) {
         console.error("Error updating profile:", error);
-        return res.status(500).send({ data: "Profile update failed" });
+        res.status(500).json({ data: "Profile update failed" });  // Ensure JSON response
     }
 });
 
