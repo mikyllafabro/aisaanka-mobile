@@ -27,7 +27,8 @@ export default function LoginScreen() {
           const { token, role } = res.data.data;
           console.log("Login successful! Token: ", token, " Role: ", role);
           Alert.alert("Login successful!");
-          AsyncStorage.setItem("token", token);
+          AsyncStorage.setItem("token", res.data.data.token);
+
 
           if (role === 0) {
             router.push("/admin/dashboard");

@@ -8,12 +8,16 @@ import { GOOGLE_MAPS_API_KEY } from '@env';
 import getCommuteSteps from "./CommuteGuide";
 import polyline from "@mapbox/polyline";
 import Profile from "./profile";
+import { useRouter } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 console.log("Loaded API Key:", GOOGLE_MAPS_API_KEY);
 
 const { width, height } = Dimensions.get("window");
 
 const Main = () => {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [places, setPlaces] = useState([]); 
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -33,10 +37,22 @@ const Main = () => {
   const [detailedRoute, setDetailedRoute] = useState(null);
   const [isRouteDetailsModalVisible, setIsRouteDetailsModalVisible] = useState(false); // For route details modal
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState(null); // Track selected route
+  const [isEndJourneyVisible, setIsEndJourneyVisible] = useState(false); // Track button visibility
+  const navigation = useNavigation();
 
   const toggleSidebar = () => {
     setSidebarVisible(!sidebarVisible);
   };
+
+  AsyncStorage.getItem("token")
+  .then(token => {
+    console.log("Token in Main Screen:", token);  // Ensure token is present
+  })
+  .catch(error => {
+    console.log("Error retrieving token:", error);
+  });
+
 
   // Get real-time location
   useEffect(() => {
@@ -208,15 +224,17 @@ const Main = () => {
 
         setDestinationQuery(result.name || ""); // ✅ Ensure the input updates
         setPlaces([]); // ✅ Clear search results
+        setIsEndJourneyVisible(true); // ✅ Show the end journey button
+        setRouteCoordinates([]); // ✅ Clear previous route
 
     } catch (error) {
         console.error("Error fetching destination details:", error);
         Alert.alert("Error", "Failed to retrieve destination details.");
     }
-};
+    
+  };
 
-  
-const calculateFare = async () => {
+  const calculateFare = async () => {
   if (selectedLocation && destinationLocation) {
     try {
       const commuteData = await getCommuteSteps(selectedLocation, destinationLocation);
@@ -235,7 +253,7 @@ const calculateFare = async () => {
   } else {
     Alert.alert("Error", "Please select a source and destination.");
   }
-};
+  };
   
   
   const calculateFareFromDistance = (distance) => {
@@ -385,6 +403,28 @@ const handleRouteSelect = (item) => {
   setIsRouteDetailsModalVisible(true); // Open the second modal (route details)
 };
 
+const handleEndJourney = () => {
+  Alert.alert("Thank you for using AISaanKa", "Would you like to leave a review?", [
+    {
+      text: "No",
+      style: "cancel",
+      onPress: () => navigation.navigate("index"),  // Use navigation for going back to index (React Navigation)
+    },
+    {
+      text: "Yes",
+      onPress: () => {
+        // Use router.push to navigate to Review screen
+        router.push('/Screen/Review', {
+          journeyDetails: {
+            startLocation: selectedLocation,
+            endLocation: destinationLocation,
+          },
+        });
+      },
+    },
+  ]);
+};
+
 
   return (
     
@@ -444,14 +484,20 @@ const handleRouteSelect = (item) => {
 ) : null}
 
   {/* Draw Route Lines */}
-{routeCoordinates.length > 0 &&
-  routeCoordinates.map((encodedPolyline, index) => (
-    <Polyline
-      key={index}
-      coordinates={decodePolyline(encodedPolyline)}
-      strokeWidth={4}
-      strokeColor={index === 0 ? "#00DF82" : index === 1 ? "#FFA500" : "#FF4500"}
-    />
+  {routeCoordinates.length > 0 &&
+    routeCoordinates.map((encodedPolyline, index) => (
+      <Polyline
+        key={index}
+        coordinates={decodePolyline(encodedPolyline)} // Decode the polyline to display the route
+        strokeWidth={6} // Increase stroke width for better visibility
+        strokeColor={
+          index === 0
+            ? "#EA4335" // Red
+            : index === 1
+            ? "#FBBC04" // Yellow
+            : "#4285F4" // Blue
+        }
+      />
 ))}
 {commuteSteps.map((step, index) =>
   step.details &&
@@ -540,6 +586,27 @@ const handleRouteSelect = (item) => {
     </TouchableOpacity>
       </View>
     )}
+
+    <View>
+      {/* End Journey Button */}
+      {isEndJourneyVisible && (
+        <TouchableOpacity
+          style={{
+            position: "absolute",
+            bottom: 20,
+            left: 20,
+            right: 20,
+            backgroundColor: "#4CAF50",
+            padding: 15,
+            borderRadius: 25,
+            alignItems: "center",
+          }}
+          onPress={handleEndJourney}
+        >
+          <Text style={{ color: "#fff", fontSize: 18 }}>End Journey</Text>
+        </TouchableOpacity>
+      )}
+    </View>
 
 {/* {detailedRoute && detailedRoute.steps && detailedRoute.steps.length > 0 && ( */}
 {isRouteDetailsModalVisible && detailedRoute && detailedRoute.steps && detailedRoute.steps.length > 0 && (
@@ -703,6 +770,8 @@ const handleRouteSelect = (item) => {
       >
         <FontAwesome6 name="location-crosshairs" size={24} color="white" />
       </TouchableOpacity>
+
+      
     </View>
   );
 };

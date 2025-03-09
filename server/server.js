@@ -9,6 +9,8 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const transporter = require('./utils/mailer.js');
 const { generateOtp } = require('./utils/otp.js');
+const { verifyUser } = require('./middleware/auth.js');  // Destructure the correct middleware function
+const reviewModel = require('./models/Review');
 
 const FRONTEND_URL = "http://192.168.1.59:5000";
 const JWT_SECRET = "aisaanka";
@@ -185,8 +187,10 @@ app.post("/login", async (req, res) => {
         }
 
         // Generate JWT Token if password matches
-        const token = jwt.sign({ email: oldUser.email, role: oldUser.role }, JWT_SECRET);
+        const token = jwt.sign({ id: User._id, email: oldUser.email, role: oldUser.role }, JWT_SECRET, { expiresIn: "24h" });
         console.log("Generated JWT token:", token);
+        console.log("Backend JWT Secret Key:", process.env.JWT_SECRET);
+
 
         return res.status(200).send({ status: "ok", data: { token, role: oldUser.role } });
     } catch (error) {
@@ -355,6 +359,34 @@ app.put("/profile/update", async (req, res) => {
     } catch (error) {
         console.error("Error updating profile:", error);
         return res.status(500).send({ data: "Profile update failed" });
+    }
+});
+
+app.post("/review", verifyUser, async (req, res) => {
+    try {
+        const { issue, suggestion, rating } = req.body;
+
+        // Validate input
+        if (!issue || !suggestion || !rating) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
+
+        // Create a new review
+        const newReview = new reviewModel({
+            user: req.user._id,  // Use the authenticated user's _id from the token
+            issue,
+            suggestion,
+            rating,
+        });
+
+        // Save the review to the database
+        await newReview.save();
+
+        // Send the response back with the created review
+        res.status(201).json(newReview);
+    } catch (error) {
+        // Handle any errors that may occur
+        res.status(500).json({ message: error.message });
     }
 });
 

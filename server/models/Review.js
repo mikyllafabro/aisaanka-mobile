@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const reviewSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "users",
+        ref: "User",
         required: true,
     },
     issue: {
@@ -24,7 +24,6 @@ const reviewSchema = new mongoose.Schema({
         max: 5
     },
 });
+const reviewModel = mongoose.model('Review', reviewSchema);
 
-const ReviewModel = mongoose.model("review", reviewSchema);
-
-module.exports = mongoose.model("Review", reviewSchema);
+module.exports = reviewModel;
