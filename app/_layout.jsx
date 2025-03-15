@@ -1,8 +1,9 @@
-import { Stack, SplashScreen } from 'expo-router'
+import { Stack, SplashScreen } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { useEffect } from 'react';
 import "../global.css";
 
+// Prevent SplashScreen from auto-hiding before fonts load
 SplashScreen.preventAutoHideAsync();
 
 const RootLayout = () => {
@@ -19,22 +20,28 @@ const RootLayout = () => {
   });
 
   useEffect(() => {
-    if (error) throw error;
+    if (error) {
+      console.error("Error loading fonts:", error);
+      return;
+    }
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, error]);
 
-    if (fontsLoaded) SplashScreen.hideAsync();
-  }, [fontsLoaded, error])
+  // Prevent app from rendering before fonts are loaded
+  if (!fontsLoaded && !error) return null;
 
-  if(!fontsLoaded && !error) return null;
   return (
-    <Stack options={{ headerShown: false }} >
-      <Stack.Screen name="index"/> 
-      <Stack.Screen name="auth/login"/>
-      <Stack.Screen name="auth/register"/>
-      <Stack.Screen name="Screen/main"/>
-      <Stack.Screen name="admin/dashboard"/>
-      <Stack.Screen name="Screen/Review"/>
+    <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+      <Stack.Screen name="auth/register" options={{ headerShown: false }} />
+      <Stack.Screen name="Screen/main" options={{ headerShown: false }} />
+      <Stack.Screen name="admin/dashboard" options={{ headerShown: false }} />
+      <Stack.Screen name="Screen/Review" options={{ headerShown: false }} />
     </Stack>
-  )
-}
+  );
+};
 
-export default RootLayout
+export default RootLayout;

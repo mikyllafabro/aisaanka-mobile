@@ -1,28 +1,65 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
+const UserSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true,
+        min: 6,
+        max: 255
+    },
     username: {
         type: String,
-        maxLength: [30, 'Your name cannot exceed 30 characters'],
-        default: 'DefaultUsername'
+        required: true,
+        max: 10
     },
     email: {
         type: String,
-        required: [true, 'Please enter your email'],
-        unique: true,
+        required: true,
+        min: 6,
+        max: 255
+    },
+    age: {
+        type: Number,
+        required: true,
+        min: 1,
+        max: 120
+    },
+    category: {
+        type: String,
+        required: true,
+        enum: ["Daily Commuter", "Student", "Tourist"]
     },
     password: {
         type: String,
-        minlength: [6, 'Your password must be longer than 6 characters'],
+        required: true,
+        min: 6,
+        max: 1024
     },
     role: {
-        type: Number,
-        default: 1, // 0 - Admin, 1 - User
+        type: String,
+        enum: ["user", "admin"], // Restricts role values
+        default: "user" // Sets default role
     },
-    otp: String,
-    otpExpires: Date,
+    status: {
+        type: String,
+        enum: ["active", "inactive", "banned"],
+        default: "active"
+    },
+    otp: {
+        type: String,
+        required: false
+    },
+    otpExpires: {
+        type: Date,
+        required: false
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
 });
 
-module.exports = mongoose.model('User', userSchema);
+const UserModel = mongoose.model("users", UserSchema);
+export default UserModel;

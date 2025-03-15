@@ -1,19 +1,26 @@
-const express = require("express");
-const { signup, loginUser, logout, verifyOtp, resendOtp, getProfile, updateProfile } = require("../controllers/authController.js");
-const { verifyUser, verifyAdmin } = require("../middleware/auth.js");
+import express from "express";
+import { signup, login, logout, verifyOtp, 
+    resendOtp, getProfile, updateProfile, 
+    forgotPassword, resetPassword,  getUserTravelHistory} from "../controllers/authController.js";
+import { verifyUser, verifyAdmin } from "../middleware/auth.js"; 
 
 const router = express.Router();
 
 router.post("/signup", signup);
-router.post("/login", loginUser);
+router.post("/login", login);
 router.post("/logout", verifyUser, logout);
 router.post("/verify-otp", verifyOtp);
 router.post("/resend-otp", resendOtp);
+router.get('/travel-history/:id', getUserTravelHistory);
+
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
+
 router.get("/profile", verifyUser, getProfile);
-router.put("/profile", verifyUser, updateProfile);
+router.put("/profile/update", verifyUser, updateProfile);
 
 router.get("/admin-dashboard", verifyUser, verifyAdmin, (req, res) => {
     res.json({ message: "Welcome, Admin!" });
 });
 
-module.exports = router;
+export default router;

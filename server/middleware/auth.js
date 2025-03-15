@@ -1,41 +1,43 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const dotenv = require('dotenv');
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+import UserModel from "../models/User.js";
 dotenv.config();
 
-const verifyUser = async (req, res, next) => {
+export const verifyUser = async (req, res, next) => {
+    const token = req.headers.authorization?.split(" ")[1]; // Extract token
+
+    if (!token) {
+        console.error("No token provided");
+        return res.status(401).json({ message: "Not Authenticated: No Token Provided" });
+    }
+
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ message: "Not Authenticated: No Token Provided" });
-        }
-
-        const token = authHeader.split(" ")[1];
-        console.log("Token received on backend:", token);
-
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log("Decoded Token Payload:", decoded);
-
-        // Fix: Use email instead of id
-        req.user = await User.findOne({ email: decoded.email }).select("-password");
+        console.log("Decoded JWT:", decoded); // Check the decoded token
+        req.user = await UserModel.findById(decoded.id).select("-password"); // Attach user to req
         if (!req.user) {
-            return res.status(401).json({ message: "Not Authenticated: User not found" });
+            console.error("User not found");
+            return res.status(401).json({ message: "Not Authenticated: Invalid User" });
         }
-
+        console.log("Authenticated User:", req.user); // Log the authenticated user
         next();
     } catch (error) {
-        console.error("JWT Verification Error:", error.message);
+        console.error("JWT verification failed:", error);
         res.status(401).json({ message: "Not Authenticated: Invalid Token" });
     }
 };
 
-
-// Admin-only route check (optional, as needed)
-const verifyAdmin = async (req, res, next) => {
-    if (!req.user || req.user.role !== "admin") {
+// ✅ Middleware to verify if the user is an admin
+export const verifyAdmin = async (req, res, next) => {
+    if (!req.user) {
+        console.error("User not authenticated");
         return res.status(403).json({ message: "Access Denied: Admin Only" });
     }
+
+    if (req.user.role !== "admin") {
+        console.error("Access denied: Not an admin");
+        return res.status(403).json({ message: "Access Denied: Admin Only" });
+    }
+    console.log("Admin Access Granted:", req.user); // Log the admin access
     next();
 };
-
-module.exports = { verifyUser, verifyAdmin };
