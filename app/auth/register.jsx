@@ -18,7 +18,7 @@ import { useRouter } from "expo-router";
 import { Feather, FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { baseUrl } from "../../common/baseUrl";
+import  baseURL from "../../assets/common/baseUrl";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -69,7 +69,7 @@ export default function RegisterScreen() {
       console.log("Submitting registration data:", {...userData, password: "****"});
       
       // Send registration request to your backend
-      const response = await axios.post(`${baseUrl}/api/auth/signup`, userData);
+      const response = await axios.post(`${baseURL}/api/auth/signup`, userData);
       
       console.log("Registration successful:", response.data);
       
