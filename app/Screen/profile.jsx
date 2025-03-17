@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, Modal, Alert, ActivityIndicator, StyleSheet, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { BASE_URL } from "@env";
+import  baseURL from "../../assets/common/baseUrl";
+
 
 export default function Profile() {
   const navigation = useNavigation();
@@ -26,7 +27,7 @@ export default function Profile() {
         throw new Error("No token found. Please log in again.");
       }
 
-      const response = await fetch(`${BASE_URL}/userdata`, {
+      const response = await fetch(`${baseURL}/api/auth/profile`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -57,7 +58,7 @@ export default function Profile() {
 
       const token = await AsyncStorage.getItem("token");
   
-      const response = await fetch(`${BASE_URL}/profile/update`, {
+      const response = await fetch(`${baseURL}/api/auth/profile/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

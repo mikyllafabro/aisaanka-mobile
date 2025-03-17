@@ -4,7 +4,7 @@ import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet 
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Swal from "sweetalert2";
-import { BASE_URL } from "@env";
+import  baseURL from "../../assets/common/baseUrl";
 
 const OTPVerification = () => {
   const router = useRouter();
@@ -24,7 +24,7 @@ const OTPVerification = () => {
       if (storedEmail) {
         setEmail(storedEmail);
       } else {
-        router.push("/auth/register");
+        router.push("/Auth/Register");
         //navigation.navigate("Register"); //Redirect if no email is found
       }
     };
@@ -55,7 +55,7 @@ const OTPVerification = () => {
     setError("");
 
     try {
-        const response = await fetch(`${BASE_URL}/verify-otp`, {
+        const response = await fetch(`${baseURL}/api/auth/verify-otp`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, otp: otp.join("") }),
@@ -70,7 +70,7 @@ const OTPVerification = () => {
         if (response.ok && data.message === "OTP verified successfully") {
             alert("Success!", "OTP Verified Successfully!", "success");
             AsyncStorage.removeItem("emailForOTP");
-            router.push("/auth/login");
+            router.push("/Auth/Login");
                 // navigation.navigate("Login");
         } else {
             setError(data.message);
@@ -88,7 +88,7 @@ const OTPVerification = () => {
     setError("");
   
     try {
-      const response = await fetch(`${BASE_URL}/resend-otp`, {
+      const response = await fetch(`${baseURL}/api/auth/resend-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

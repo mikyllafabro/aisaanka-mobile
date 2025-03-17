@@ -14,6 +14,7 @@ export const signup = async (req, res) => {
         const otp = generateOtp();
         const otpExpires = Date.now() + 3600000; // 1 hour
 
+        console.log("🔢 Generated OTP:", otp);
         sendOtpEmail(email, otp);
 
         const newUser = new UserModel({ username, name, email, age, category, password: hashedPassword, otp, otpExpires, role: "user" });
@@ -84,17 +85,19 @@ export const login = async (req, res) => {
                 { expiresIn: "7d" }
             );
             return res.status(200).json({
-                message: "Success",
-                token,
-                user: {
-                    id: user._id,
-                    name: user.name,
-                    username: user.username,
-                    email: user.email,
-                    role: user.role,
-                    status: user.status,
-                    previousStatus: wasInactive ? "inactive" : user.status,
-                },
+                status: "ok",
+                data: {  // ✅ Wrap response in a `data` object
+                    token,
+                    user: {
+                        id: user._id,
+                        name: user.name,
+                        username: user.username,
+                        email: user.email,
+                        role: user.role,
+                        status: user.status,
+                        previousStatus: wasInactive ? "inactive" : user.status,
+                    }
+                }
             });
         } catch (jwtError) {
             console.error("JWT generation error:", jwtError);
@@ -140,7 +143,7 @@ export const verifyOtp = async (req, res) => {
 
         res.status(200).json({ 
             message: "OTP verified successfully", 
-            redirect: "/home"
+            redirect: "Auth/Login"
         });
     } catch (error) {
         res.status(500).json({ error: error.message });

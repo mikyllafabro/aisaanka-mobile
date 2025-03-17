@@ -5,8 +5,9 @@ import morgan from "morgan";
 
 import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes.js";
+import placeRoutes from "./routes/placeRoutes.js";
 // import userRoutes from "./routes/userRoutes.js";
-// import reviewRoutes from "./routes/reviewRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -42,7 +43,8 @@ app.use(morgan("dev"));
 // Routes
 app.use("/api/auth", authRoutes);
 // app.use("/api/user", userRoutes);
-// app.use("/api/review", reviewRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/places", placeRoutes);
 
 // Add a health check endpoint for testing connections
 app.get("/api/health", (req, res) => {

@@ -9,7 +9,7 @@ const reviewSchema = new mongoose.Schema({
     issue: {
         type: String,
         required: true,
-        max: 10
+        max: ""
     },
     suggestion: {
         type: String,
@@ -31,6 +31,12 @@ const reviewSchema = new mongoose.Schema({
     deleted: {
         type: Boolean,
         default: false
+    },
+    journey: {
+        from: String,
+        to: String,
+        fare: String,
+        duration: String
     },
 });
 

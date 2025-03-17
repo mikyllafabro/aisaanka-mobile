@@ -18,10 +18,11 @@ import axios from "axios";
 import { GOOGLE_MAPS_API_KEY } from "@env";
 import getCommuteSteps from "./CommuteGuide";
 import polyline from "@mapbox/polyline";
-// import Profile from "./profile";
+import Profile from "./profile";
 import { useRouter } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import  baseURL from "../../assets/common/baseUrl";
 
 console.log("Loaded API Key:", GOOGLE_MAPS_API_KEY);
 
@@ -64,7 +65,322 @@ const Main = () => {
 // Update the Profile component with a more professional and visually appealing design
 
 // Add this hardcoded Profile component
+// const Profile = () => {
+//   return (
+//     <View style={{ flex: 1, backgroundColor: "#f8f9fa", borderRadius: 12 }}>
+//       {/* Profile Header */}
+//       <View style={{ 
+//         alignItems: "center", 
+//         padding: 20, 
+//         backgroundColor: "#0b617e",
+//         borderTopLeftRadius: 12,
+//         borderTopRightRadius: 12,
+//         marginBottom: 0,
+//         shadowColor: "#000",
+//         shadowOffset: { width: 0, height: 2 },
+//         shadowOpacity: 0.1,
+//         shadowRadius: 4,
+//       }}>
+//         <View style={{
+//           width: 90,
+//           height: 90,
+//           backgroundColor: "white",
+//           borderRadius: 45,
+//           justifyContent: "center",
+//           alignItems: "center",
+//           shadowColor: "#000",
+//           shadowOffset: { width: 0, height: 3 },
+//           shadowOpacity: 0.2,
+//           shadowRadius: 5,
+//           elevation: 5,
+//         }}>
+//           <FontAwesome name="user-circle" size={80} color="#0b617e" />
+//         </View>
+//         <Text style={{ 
+//           fontSize: 22, 
+//           fontWeight: "bold", 
+//           color: "white", 
+//           marginTop: 15,
+//           letterSpacing: 0.5
+//         }}>
+//           Adrian Philip T Onda
+//         </Text>
+//         <Text style={{ 
+//           fontSize: 14, 
+//           color: "rgba(255,255,255,0.85)", 
+//           marginTop: 5,
+//         }}>
+//           adrianonda373@gmail.com
+//         </Text>
+        
+//         {/* User Stats */}
+//         <View style={{
+//           flexDirection: "row",
+//           marginTop: 20,
+//           width: "100%",
+//           justifyContent: "space-around"
+//         }}>
+//           <View style={{ alignItems: "center" }}>
+//             <Text style={{ color: "white", fontSize: 20, fontWeight: "bold" }}>2</Text>
+//             <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>Trips</Text>
+//           </View>
+//         </View>
+//       </View>
+
+//       {/* Travel History Section */}
+//       <View style={{ 
+//         backgroundColor: "white", 
+//         borderRadius: 12, 
+//         padding: 15, 
+//         margin: 15,
+//         shadowColor: "#000",
+//         shadowOffset: { width: 0, height: 3 },
+//         shadowOpacity: 0.1,
+//         shadowRadius: 5,
+//         elevation: 2
+//       }}>
+//         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+//           <FontAwesome5 name="history" size={16} color="#0b617e" style={{ marginRight: 8 }} />
+//           <Text style={{ fontSize: 17, fontWeight: "bold", color: "#333" }}>
+//             Travel History
+//           </Text>
+//         </View>
+
+//         {/* MOA to Pasay */}
+//         <View style={{ 
+//           flexDirection: "row", 
+//           padding: 12, 
+//           backgroundColor: "#f9f9f9",
+//           borderRadius: 10,
+//           marginBottom: 10,
+//           borderLeftWidth: 4,
+//           borderLeftColor: "#0b617e",
+//         }}>
+//           <View style={{ flex: 1 }}>
+//             <View style={{ flexDirection: "row", alignItems: "center" }}>
+//               <FontAwesome5 name="route" size={14} color="#0b617e" style={{ marginRight: 8 }} />
+//               <Text style={{ fontSize: 15, fontWeight: "bold", color: "#333" }}>
+//                 MOA to Pasay
+//               </Text>
+//             </View>
+//             <Text style={{ color: "#666", fontSize: 12, marginTop: 5, marginLeft: 22 }}>
+//               March 9, 2025 • 2:30 PM
+//             </Text>
+//             <View style={{ flexDirection: "row", marginTop: 8, marginLeft: 22 }}>
+//               <View style={{ 
+//                 backgroundColor: "#e8f4f8", 
+//                 paddingHorizontal: 10, 
+//                 paddingVertical: 3, 
+//                 borderRadius: 30, 
+//                 flexDirection: "row",
+//                 alignItems: "center"
+//               }}>
+//                 <FontAwesome name="money" size={10} color="#0b617e" style={{ marginRight: 4 }} />
+//                 <Text style={{ fontSize: 12, color: "#0b617e", fontWeight: "500" }}>
+//                   ₱45.00
+//                 </Text>
+//               </View>
+//               <View style={{ 
+//                 backgroundColor: "#f0f8e8", 
+//                 marginLeft: 8, 
+//                 paddingHorizontal: 10, 
+//                 paddingVertical: 3, 
+//                 borderRadius: 30,
+//                 flexDirection: "row",
+//                 alignItems: "center"
+//               }}>
+//                 <FontAwesome5 name="clock" size={10} color="#4a8c3f" style={{ marginRight: 4 }} />
+//                 <Text style={{ fontSize: 12, color: "#4a8c3f", fontWeight: "500" }}>
+//                   45 mins
+//                 </Text>
+//               </View>
+//             </View>
+//           </View>
+//         </View>
+
+//         {/* Pasay to MOA */}
+//         <View style={{ 
+//           flexDirection: "row", 
+//           padding: 12,
+//           backgroundColor: "#f9f9f9",
+//           borderRadius: 10,
+//           borderLeftWidth: 4,
+//           borderLeftColor: "#0b617e"
+//         }}>
+//           <View style={{ flex: 1 }}>
+//             <View style={{ flexDirection: "row", alignItems: "center" }}>
+//               <FontAwesome5 name="route" size={14} color="#0b617e" style={{ marginRight: 8 }} />
+//               <Text style={{ fontSize: 15, fontWeight: "bold", color: "#333" }}>
+//                 Pasay to MOA
+//               </Text>
+//             </View>
+//             <Text style={{ color: "#666", fontSize: 12, marginTop: 5, marginLeft: 22 }}>
+//               March 8, 2025 • 10:15 AM
+//             </Text>
+//             <View style={{ flexDirection: "row", marginTop: 8, marginLeft: 22 }}>
+//               <View style={{ 
+//                 backgroundColor: "#e8f4f8", 
+//                 paddingHorizontal: 10, 
+//                 paddingVertical: 3, 
+//                 borderRadius: 30, 
+//                 flexDirection: "row",
+//                 alignItems: "center"
+//               }}>
+//                 <FontAwesome name="money" size={10} color="#0b617e" style={{ marginRight: 4 }} />
+//                 <Text style={{ fontSize: 12, color: "#0b617e", fontWeight: "500" }}>
+//                   ₱42.00
+//                 </Text>
+//               </View>
+//               <View style={{ 
+//                 backgroundColor: "#f0f8e8", 
+//                 marginLeft: 8, 
+//                 paddingHorizontal: 10, 
+//                 paddingVertical: 3, 
+//                 borderRadius: 30,
+//                 flexDirection: "row",
+//                 alignItems: "center"
+//               }}>
+//                 <FontAwesome5 name="clock" size={10} color="#4a8c3f" style={{ marginRight: 4 }} />
+//                 <Text style={{ fontSize: 12, color: "#4a8c3f", fontWeight: "500" }}>
+//                   40 mins
+//                 </Text>
+//               </View>
+//             </View>
+//           </View>
+//         </View>
+//       </View>
+
 const Profile = () => {
+  const router = useRouter();
+  const [userData, setUserData] = useState({
+    name: "Loading...",
+    email: "Loading...",
+    trips: 0,
+    travelHistory: []
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Fetch user data when component mounts
+    const fetchUserData = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        if (!token) {
+          console.log("No token found, user needs to login");
+          router.push("/Auth/Login");
+          return;
+        }
+
+        console.log("Attempting to fetch user profile with token:", token.substring(0, 15) + "...");
+
+        const response = await axios.get(`${baseURL}/api/auth/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        console.log("User profile data:", response.data);
+        
+        let tripHistory = [];
+
+      try {
+        const tripsResponse = await axios.get(`${baseURL}/api/places/trips`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        console.log("Trips response:", tripsResponse.data);
+        
+        if (tripsResponse.data && Array.isArray(tripsResponse.data.trips)) {
+          tripHistory = tripsResponse.data.trips;
+          console.log("Fetched trip history:", tripHistory);
+        }
+      } catch (tripError) {
+        console.error("Error fetching trip history:", tripError);
+        console.log("Using placeholder trip history data instead");
+
+        tripHistory = [
+          {
+            id: "1",
+            from: "SM Mall of Asia",
+            to: "Pasay City",
+            date: "March 9, 2025",
+            time: "2:30 PM",
+            fare: "₱45.00",
+            duration: "45 mins"
+          },
+          {
+            id: "2",
+            from: "Pasay City",
+            to: "SM Mall of Asia",
+            date: "March 8, 2025",
+            time: "10:15 AM",
+            fare: "₱42.00",
+            duration: "40 mins"
+          }
+        ];
+      }
+
+        if (response.data) {
+          setUserData({
+            name: response.data.name || response.data.username || "User",
+            email: response.data.email || "No email provided",
+            category: response.data.category || "",
+            age: response.data.age || "",
+            trips: tripHistory.length || 0,
+            travelHistory: tripHistory
+          });
+        }
+        console.log("User data set successfully:", {
+          name: response.data.name || response.data.username || "User",
+          email: response.data.email || "No email provided"
+        });
+        setIsLoading(false);
+        setRefreshing(false);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        
+        // Use placeholder data as fallback
+    setUserData({
+      name: "User",
+      email: "Authentication error",
+      trips: 0,
+      travelHistory: [
+        {
+          id: "placeholder-1",
+          from: "MOA",
+          to: "Pasay",
+          date: "March 9, 2025",
+          time: "2:30 PM",
+          fare: "₱45.00",
+          duration: "45 mins"
+        },
+        {
+          id: "placeholder-2",
+          from: "Pasay",
+          to: "MOA",
+          date: "March 8, 2025",
+          time: "10:15 AM",
+          fare: "₱42.00",
+          duration: "40 mins"
+        }
+      ]
+    });
+    setIsLoading(false);
+    setRefreshing(false);
+  }
+};
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchUserData();
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: "#f8f9fa", borderRadius: 12 }}>
       {/* Profile Header */}
@@ -102,14 +418,14 @@ const Profile = () => {
           marginTop: 15,
           letterSpacing: 0.5
         }}>
-          Adrian Philip T Onda
+          {isLoading ? "Loading..." : userData.name}
         </Text>
         <Text style={{ 
           fontSize: 14, 
           color: "rgba(255,255,255,0.85)", 
           marginTop: 5,
         }}>
-          adrianonda373@gmail.com
+          {isLoading ? "Loading..." : userData.email}
         </Text>
         
         {/* User Stats */}
@@ -120,13 +436,15 @@ const Profile = () => {
           justifyContent: "space-around"
         }}>
           <View style={{ alignItems: "center" }}>
-            <Text style={{ color: "white", fontSize: 20, fontWeight: "bold" }}>2</Text>
+            <Text style={{ color: "white", fontSize: 20, fontWeight: "bold" }}>
+              {isLoading ? "-" : userData.trips}
+            </Text>
             <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>Trips</Text>
           </View>
         </View>
       </View>
 
-      {/* Travel History Section */}
+      {/* Travel History Section with Pull-to-refresh */}
       <View style={{ 
         backgroundColor: "white", 
         borderRadius: 12, 
@@ -136,117 +454,98 @@ const Profile = () => {
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.1,
         shadowRadius: 5,
-        elevation: 2
+        elevation: 2,
+        flex: 1
       }}>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
           <FontAwesome5 name="history" size={16} color="#0b617e" style={{ marginRight: 8 }} />
           <Text style={{ fontSize: 17, fontWeight: "bold", color: "#333" }}>
             Travel History
           </Text>
+          {/* Add refresh button */}
+          <TouchableOpacity 
+            onPress={handleRefresh} 
+            style={{ marginLeft: 'auto' }}
+          >
+            <FontAwesome5 
+              name="sync" 
+              size={14} 
+              color="#0b617e" 
+              style={{ padding: 5 }}
+            />
+          </TouchableOpacity>
         </View>
 
-        {/* MOA to Pasay */}
-        <View style={{ 
-          flexDirection: "row", 
-          padding: 12, 
-          backgroundColor: "#f9f9f9",
-          borderRadius: 10,
-          marginBottom: 10,
-          borderLeftWidth: 4,
-          borderLeftColor: "#0b617e",
-        }}>
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <FontAwesome5 name="route" size={14} color="#0b617e" style={{ marginRight: 8 }} />
-              <Text style={{ fontSize: 15, fontWeight: "bold", color: "#333" }}>
-                MOA to Pasay
-              </Text>
-            </View>
-            <Text style={{ color: "#666", fontSize: 12, marginTop: 5, marginLeft: 22 }}>
-              March 9, 2025 • 2:30 PM
-            </Text>
-            <View style={{ flexDirection: "row", marginTop: 8, marginLeft: 22 }}>
-              <View style={{ 
-                backgroundColor: "#e8f4f8", 
-                paddingHorizontal: 10, 
-                paddingVertical: 3, 
-                borderRadius: 30, 
-                flexDirection: "row",
-                alignItems: "center"
-              }}>
-                <FontAwesome name="money" size={10} color="#0b617e" style={{ marginRight: 4 }} />
-                <Text style={{ fontSize: 12, color: "#0b617e", fontWeight: "500" }}>
-                  ₱45.00
-                </Text>
-              </View>
-              <View style={{ 
-                backgroundColor: "#f0f8e8", 
-                marginLeft: 8, 
-                paddingHorizontal: 10, 
-                paddingVertical: 3, 
-                borderRadius: 30,
-                flexDirection: "row",
-                alignItems: "center"
-              }}>
-                <FontAwesome5 name="clock" size={10} color="#4a8c3f" style={{ marginRight: 4 }} />
-                <Text style={{ fontSize: 12, color: "#4a8c3f", fontWeight: "500" }}>
-                  45 mins
-                </Text>
-              </View>
-            </View>
+        {isLoading ? (
+          <View style={{ padding: 20, alignItems: 'center' }}>
+            <Text>Loading travel history...</Text>
           </View>
-        </View>
-
-        {/* Pasay to MOA */}
-        <View style={{ 
-          flexDirection: "row", 
-          padding: 12,
-          backgroundColor: "#f9f9f9",
-          borderRadius: 10,
-          borderLeftWidth: 4,
-          borderLeftColor: "#0b617e"
-        }}>
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <FontAwesome5 name="route" size={14} color="#0b617e" style={{ marginRight: 8 }} />
-              <Text style={{ fontSize: 15, fontWeight: "bold", color: "#333" }}>
-                Pasay to MOA
-              </Text>
+          ) : refreshing ? (
+            <View style={{ padding: 20, alignItems: 'center' }}>
+              <Text>Refreshing data...</Text>
             </View>
-            <Text style={{ color: "#666", fontSize: 12, marginTop: 5, marginLeft: 22 }}>
-              March 8, 2025 • 10:15 AM
-            </Text>
-            <View style={{ flexDirection: "row", marginTop: 8, marginLeft: 22 }}>
+        ) : userData.travelHistory && userData.travelHistory.length > 0 ? (
+          <FlatList
+            data={userData.travelHistory}
+            keyExtractor={(item) => item.id || String(Math.random())}
+            renderItem={({ item }) => (
               <View style={{ 
-                backgroundColor: "#e8f4f8", 
-                paddingHorizontal: 10, 
-                paddingVertical: 3, 
-                borderRadius: 30, 
-                flexDirection: "row",
-                alignItems: "center"
+                flexDirection: "row", 
+                padding: 12, 
+                backgroundColor: "#f9f9f9",
+                borderRadius: 10,
+                marginBottom: 10,
+                borderLeftWidth: 4,
+                borderLeftColor: "#0b617e",
               }}>
-                <FontAwesome name="money" size={10} color="#0b617e" style={{ marginRight: 4 }} />
-                <Text style={{ fontSize: 12, color: "#0b617e", fontWeight: "500" }}>
-                  ₱42.00
-                </Text>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <FontAwesome5 name="route" size={14} color="#0b617e" style={{ marginRight: 8 }} />
+                    <Text style={{ fontSize: 15, fontWeight: "bold", color: "#333" }}>
+                      {item.from} to {item.to}
+                    </Text>
+                  </View>
+                  <Text style={{ color: "#666", fontSize: 12, marginTop: 5, marginLeft: 22 }}>
+                    {item.date} • {item.time}
+                  </Text>
+                  <View style={{ flexDirection: "row", marginTop: 8, marginLeft: 22 }}>
+                    <View style={{ 
+                      backgroundColor: "#e8f4f8", 
+                      paddingHorizontal: 10, 
+                      paddingVertical: 3, 
+                      borderRadius: 30, 
+                      flexDirection: "row",
+                      alignItems: "center"
+                    }}>
+                      <FontAwesome name="money" size={10} color="#0b617e" style={{ marginRight: 4 }} />
+                      <Text style={{ fontSize: 12, color: "#0b617e", fontWeight: "500" }}>
+                        {item.fare}
+                      </Text>
+                    </View>
+                    <View style={{ 
+                      backgroundColor: "#f0f8e8", 
+                      marginLeft: 8, 
+                      paddingHorizontal: 10, 
+                      paddingVertical: 3, 
+                      borderRadius: 30,
+                      flexDirection: "row",
+                      alignItems: "center"
+                    }}>
+                      <FontAwesome5 name="clock" size={10} color="#4a8c3f" style={{ marginRight: 4 }} />
+                      <Text style={{ fontSize: 12, color: "#4a8c3f", fontWeight: "500" }}>
+                        {item.duration}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
               </View>
-              <View style={{ 
-                backgroundColor: "#f0f8e8", 
-                marginLeft: 8, 
-                paddingHorizontal: 10, 
-                paddingVertical: 3, 
-                borderRadius: 30,
-                flexDirection: "row",
-                alignItems: "center"
-              }}>
-                <FontAwesome5 name="clock" size={10} color="#4a8c3f" style={{ marginRight: 4 }} />
-                <Text style={{ fontSize: 12, color: "#4a8c3f", fontWeight: "500" }}>
-                  40 mins
-                </Text>
-              </View>
-            </View>
+            )}
+          />
+        ) : (
+          <View style={{ padding: 20, alignItems: 'center' }}>
+            <Text style={{ color: '#666' }}>No travel history found</Text>
           </View>
-        </View>
+        )}
       </View>
 
       {/* Sign Out Button */}
@@ -266,7 +565,7 @@ const Profile = () => {
           elevation: 3
         }}
         onPress={() => {
-          router.push("/auth/login");
+          router.push("/Auth/Login");
         }}
       >
         <FontAwesome name="sign-out" size={18} color="white" style={{ marginRight: 8 }} />
@@ -395,6 +694,9 @@ const Profile = () => {
   
       setSearchQuery(locationName); // Update search bar with the proper name
       setPlaces([]); // Clear search results
+      setTimeout(() => setPlaces([]), 100);
+      Keyboard.dismiss();
+
       
       // Animate map to the selected location
       if (mapRef.current) {
@@ -481,7 +783,7 @@ const selectDestination = async (place) => {
       Alert.alert("Error", "Google API did not return valid data.");
       // Restore previous query if there's an error
       setDestinationQuery(destinationQuery);
-
+      setDestinationPlaces([]);
       return;
     }
 
@@ -491,7 +793,8 @@ const selectDestination = async (place) => {
       console.error("No location data found in API response:", result);
       Alert.alert("Error", "Could not retrieve destination details.");
       // Restore previous query if there's an error
-      setDestinationQuery(destinationQuery);
+      setDestinationQuery("");
+      setDestinationPlaces([]);
       return;
     }
 
@@ -506,6 +809,7 @@ const selectDestination = async (place) => {
     });
 
     setDestinationQuery(locationName); // Update search bar properly
+    setDestinationPlaces([]);
     setPlaces([]); // Clear search results
     setIsEndJourneyVisible(true); // Show the end journey button
     
@@ -894,30 +1198,140 @@ const selectDestination = async (place) => {
     setIsRouteDetailsModalVisible(true); // Open the second modal (route details)
   };
 
-  const handleEndJourney = () => {
-    Alert.alert(
-      "Thank you for using AISaanKa",
-      "Would you like to leave a review?",
-      [
+  const handleEndJourney = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert("Error", "You need to be logged in to save your trip.");
+        return;
+      }
+  
+      // Calculate fare and duration based on your app's logic
+      const fareAmount = detailedRoute?.fare || "₱" + (Math.floor(Math.random() * 50) + 30) + ".00";
+      const durationMinutes = detailedRoute?.duration || (Math.floor(Math.random() * 30) + 15) + " mins";
+  
+      // Prepare trip data
+      const newTrip = {
+        from: selectedLocation?.name || "Unknown location",
+        to: destinationLocation?.name || "Unknown destination",
+        date: new Date().toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }),
+        time: new Date().toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }),
+        fare: fareAmount,
+        duration: durationMinutes
+      };
+  
+    console.log("Saving trip data:", newTrip);
+    console.log("API endpoint:", `${baseURL}/api/places/trips`);
+    console.log("Token for authorization:", token.substring(0, 15) + "...");
+
+
+      // Save trip to API
+      const response = await axios.post(
+        `${baseURL}/api/places/trips`,
+        { trip: newTrip },  // Wrap in trip object to match controller expectations
         {
-          text: "No",
-          style: "cancel",
-          onPress: () => router.push("../Screen/main"), // Navigate back to the main screen instead of index
-        },
-        {
-          text: "Yes",
-          onPress: () => {
-            router.push("/Screen/Review", {
-              journeyDetails: {
-                startLocation: selectedLocation,
-                endLocation: destinationLocation,
-              },
-            });
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+  
+      console.log("Trip saved successfully:", response.data);
+  
+      Alert.alert(
+        "Thank you for using AISaanKa",
+        "Would you like to leave a review?",
+        [
+          {
+            text: "No",
+            style: "cancel",
+            onPress: () => {
+              // Reset navigation and selections
+              setSelectedLocation(null);
+              setDestinationLocation(null);
+              setSearchQuery("");
+              setDestinationQuery("");
+              setIsEndJourneyVisible(false);
+              setRouteCoordinates([]);
+              setDetailedRoute(null);
+            }
           },
-        },
-      ]
-    );
+          {
+            text: "Yes",
+            onPress: () => {
+              router.push("/Screen/Review", {
+                journeyDetails: {
+                  startLocation: selectedLocation,
+                  endLocation: destinationLocation,
+                  fare: fareAmount,
+                  duration: durationMinutes
+                },
+              });
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error("Error saving trip:", error);
+      Alert.alert(
+        "Error Saving Trip",
+        "Your trip couldn't be saved to your history, but you can still leave a review.",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Leave Review",
+            onPress: () => {
+              router.push("/Screen/Review", {
+                journeyDetails: {
+                  startLocation: selectedLocation,
+                  endLocation: destinationLocation,
+                },
+              });
+            },
+          },
+        ]
+      );
+    }
   };
+
+  // const handleEndJourney = () => {
+
+    
+
+  //   Alert.alert(
+  //     "Thank you for using AISaanKa",
+  //     "Would you like to leave a review?",
+  //     [
+  //       {
+  //         text: "No",
+  //         style: "cancel",
+  //         onPress: () => router.push("../Screen/main"), // Navigate back to the main screen instead of index
+  //       },
+  //       {
+  //         text: "Yes",
+  //         onPress: () => {
+  //           router.push("/Screen/Review", {
+  //             journeyDetails: {
+  //               startLocation: selectedLocation,
+  //               endLocation: destinationLocation,
+  //             },
+  //           });
+  //         },
+  //       },
+  //     ]
+  //   );
+  // };
 
   const trafficStatus = (trafficLevel) => {
     // This function returns the appropriate color and text based on the traffic level

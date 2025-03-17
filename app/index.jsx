@@ -85,7 +85,7 @@ export default function OnboardingScreen() {
 
       {/* Action Buttons */}
       <View style={styles.buttonContainer}>
-        <Link href="/Screen/Main" asChild>
+        <Link href="/Screen/main" asChild>
           <TouchableOpacity style={styles.primaryButton}>
             <Text style={styles.primaryButtonText}>Get Started</Text>
           </TouchableOpacity>

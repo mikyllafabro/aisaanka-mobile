@@ -72,7 +72,7 @@ export default function RegisterScreen() {
       const response = await axios.post(`${baseURL}/api/auth/signup`, userData);
       
       console.log("Registration successful:", response.data);
-      
+      AsyncStorage.setItem("emailForOTP", email);
       // Show success message
       Alert.alert(
         "Registration Successful",
@@ -80,7 +80,7 @@ export default function RegisterScreen() {
         [
           {
             text: "OK",
-            onPress: () => router.replace("/auth/login")
+            onPress: () => router.replace("/Auth/OTPVerification"),
           }
         ]
       );
@@ -174,7 +174,7 @@ export default function RegisterScreen() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <FontAwesome name="arrow-left" size={18} color="#06b71e" />
+            <FontAwesome name="arrow-left" size={18} color="#0b617e" />
           </TouchableOpacity>
           
           <View style={styles.contentContainer}>
@@ -202,7 +202,7 @@ export default function RegisterScreen() {
                   styles.inputContainer,
                   fullName.length > 0 && !fullNameVerify && styles.inputError
                 ]}>
-                  <FontAwesome name="user" size={20} color="#06b71e" style={styles.inputIcon} />
+                  <FontAwesome name="user" size={20} color="#0b617e" style={styles.inputIcon} />
                   <TextInput
                     placeholder="Full Name"
                     placeholderTextColor="#9e9e9e"
@@ -212,7 +212,7 @@ export default function RegisterScreen() {
                   />
                   {fullName.length > 0 && (
                     fullNameVerify ? (
-                      <Feather name="check-circle" color="#06b71e" size={20} />
+                      <Feather name="check-circle" color="#0b617e" size={20} />
                     ) : (
                       <Feather name="x-circle" color="#ff6b6b" size={20} />
                     )
@@ -231,7 +231,7 @@ export default function RegisterScreen() {
                   styles.inputContainer,
                   username.length > 0 && !usernameVerify && styles.inputError
                 ]}>
-                  <FontAwesome name="at" size={20} color="#06b71e" style={styles.inputIcon} />
+                  <FontAwesome name="at" size={20} color="#0b617e" style={styles.inputIcon} />
                   <TextInput
                     placeholder="Username (max 10 chars)"
                     placeholderTextColor="#9e9e9e"
@@ -243,7 +243,7 @@ export default function RegisterScreen() {
                   />
                   {username.length > 0 && (
                     usernameVerify ? (
-                      <Feather name="check-circle" color="#06b71e" size={20} />
+                      <Feather name="check-circle" color="#0b617e" size={20} />
                     ) : (
                       <Feather name="x-circle" color="#ff6b6b" size={20} />
                     )
@@ -262,7 +262,7 @@ export default function RegisterScreen() {
                   styles.inputContainer,
                   email.length > 0 && !emailVerify && styles.inputError
                 ]}>
-                  <FontAwesome name="envelope" size={18} color="#06b71e" style={styles.inputIcon} />
+                  <FontAwesome name="envelope" size={18} color="#0b617e" style={styles.inputIcon} />
                   <TextInput
                     placeholder="Email Address"
                     placeholderTextColor="#9e9e9e"
@@ -274,7 +274,7 @@ export default function RegisterScreen() {
                   />
                   {email.length > 0 && (
                     emailVerify ? (
-                      <Feather name="check-circle" color="#06b71e" size={20} />
+                      <Feather name="check-circle" color="#0b617e" size={20} />
                     ) : (
                       <Feather name="x-circle" color="#ff6b6b" size={20} />
                     )
@@ -293,7 +293,7 @@ export default function RegisterScreen() {
                   styles.inputContainer,
                   age.length > 0 && !ageVerify && styles.inputError
                 ]}>
-                  <FontAwesome name="calendar" size={18} color="#06b71e" style={styles.inputIcon} />
+                  <FontAwesome name="calendar" size={18} color="#0b617e" style={styles.inputIcon} />
                   <TextInput
                     placeholder="Age (1-120)"
                     placeholderTextColor="#9e9e9e"
@@ -305,7 +305,7 @@ export default function RegisterScreen() {
                   />
                   {age.length > 0 && (
                     ageVerify ? (
-                      <Feather name="check-circle" color="#06b71e" size={20} />
+                      <Feather name="check-circle" color="#0b617e" size={20} />
                     ) : (
                       <Feather name="x-circle" color="#ff6b6b" size={20} />
                     )
@@ -327,11 +327,11 @@ export default function RegisterScreen() {
                   ]}
                   onPress={() => setShowCategoryDropdown(true)}
                 >
-                  <FontAwesome name="users" size={18} color="#06b71e" style={styles.inputIcon} />
+                  <FontAwesome name="users" size={18} color="#0b617e" style={styles.inputIcon} />
                   <Text style={category ? styles.input : styles.placeholderText}>
                     {category || "Select Category"}
                   </Text>
-                  <MaterialIcons name="arrow-drop-down" size={24} color="#06b71e" />
+                  <MaterialIcons name="arrow-drop-down" size={24} color="#0b617e" />
                 </TouchableOpacity>
               </View>
 
@@ -341,7 +341,7 @@ export default function RegisterScreen() {
                   styles.inputContainer,
                   password.length > 0 && !passwordVerify && styles.inputError
                 ]}>
-                  <FontAwesome name="lock" size={20} color="#06b71e" style={styles.inputIcon} />
+                  <FontAwesome name="lock" size={20} color="#0b617e" style={styles.inputIcon} />
                   <TextInput
                     placeholder="Create Password"
                     placeholderTextColor="#9e9e9e"
@@ -354,7 +354,7 @@ export default function RegisterScreen() {
                     <Feather
                       name={showPassword ? "eye" : "eye-off"}
                       size={20}
-                      color={password.length > 0 ? (passwordVerify ? "#06b71e" : "#ff6b6b") : "#9e9e9e"}
+                      color={password.length > 0 ? (passwordVerify ? "#0b617e" : "#ff6b6b") : "#9e9e9e"}
                     />
                   </TouchableOpacity>
                 </View>
@@ -371,7 +371,7 @@ export default function RegisterScreen() {
                   styles.inputContainer,
                   confirmPassword.length > 0 && !confirmPasswordVerify && styles.inputError
                 ]}>
-                  <FontAwesome name="lock" size={20} color="#06b71e" style={styles.inputIcon} />
+                  <FontAwesome name="lock" size={20} color="#0b617e" style={styles.inputIcon} />
                   <TextInput
                     placeholder="Confirm Password"
                     placeholderTextColor="#9e9e9e"
@@ -384,7 +384,7 @@ export default function RegisterScreen() {
                     <Feather
                       name={showConfirmPassword ? "eye" : "eye-off"}
                       size={20}
-                      color={confirmPassword.length > 0 ? (confirmPasswordVerify ? "#06b71e" : "#ff6b6b") : "#9e9e9e"}
+                      color={confirmPassword.length > 0 ? (confirmPasswordVerify ? "#0b617e" : "#ff6b6b") : "#9e9e9e"}
                     />
                   </TouchableOpacity>
                 </View>
@@ -416,7 +416,7 @@ export default function RegisterScreen() {
                 Already have an account?{' '}
                 <Text 
                   style={styles.signInLink}
-                  onPress={() => router.push("/auth/login")}
+                  onPress={() => router.push("/Auth/Login")}
                 >
                   Sign In
                 </Text>
@@ -459,12 +459,12 @@ export default function RegisterScreen() {
               >
                 <Text style={[
                   styles.optionText,
-                  category === option && { color: '#06b71e', fontWeight: '600' }
+                  category === option && { color: '#0b617e', fontWeight: '600' }
                 ]}>
                   {option}
                 </Text>
                 {category === option && (
-                  <Feather name="check" size={20} color="#06b71e" />
+                  <Feather name="check" size={20} color="#0b617e" />
                 )}
               </TouchableOpacity>
             ))}
@@ -514,7 +514,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#06b71e',
+    color: '#0b617e',
     marginBottom: 8,
   },
   subtitle: {
@@ -581,20 +581,20 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   signUpButton: {
-    backgroundColor: '#06b71e',
+    backgroundColor: '#0b617e',
     borderRadius: 12,
     height: 56,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,
-    shadowColor: '#06b71e',
+    shadowColor: '#0b617e',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 3,
   },
   disabledButton: {
-    backgroundColor: '#c8e6c9',
+    backgroundColor: '#c5c6d0',
     shadowOpacity: 0,
     elevation: 0,
   },
@@ -612,7 +612,7 @@ const styles = StyleSheet.create({
     color: '#555555',
   },
   signInLink: {
-    color: '#06b71e',
+    color: '#0b617e',
     fontWeight: '600',
   },
   termsText: {
@@ -624,7 +624,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   termsLink: {
-    color: '#06b71e',
+    color: '#0b617e',
     fontWeight: '500',
   },
   // Modal styles

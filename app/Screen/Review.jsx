@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   View, 
   TextInput, 
@@ -13,18 +13,47 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { FontAwesome5 } from '@expo/vector-icons';
-import { useNavigation } from "@react-navigation/native";
+import { useRouter, useNavigation } from "expo-router";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from "axios";
+import  baseURL from "../../assets/common/baseUrl";
 
 const Review = () => {
   const [suggestion, setSuggestion] = useState("");
   const [issue, setIssue] = useState("");
   const [rating, setRating] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const route = useRouter();
   const navigation = useNavigation();
+  
+  // Get journey details if passed via navigation
+  const journeyDetails = route.params?.journeyDetails;
+
+  // Fetch user ID on component mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        if (!token) return;
+        
+        const response = await axios.get(`${baseURL}/api/auth/profile`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.data && response.data._id) {
+          setUserId(response.data._id);
+        }
+      } catch (error) {
+        console.error("Error fetching user ID:", error);
+      }
+    };
+    
+    fetchUserData();
+  }, []);
 
   // Function to handle form submission
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (rating === 0) {
       Alert.alert("Rating Required", "Please provide a star rating before submitting!", [
         { text: "OK", style: "cancel" },
@@ -34,17 +63,70 @@ const Review = () => {
 
     setLoading(true);
 
-    setTimeout(() => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      
+      if (!token) {
+        Alert.alert("Authentication Error", "You must be logged in to submit a review.", [
+          { text: "OK", style: "cancel" },
+        ]);
+        setLoading(false);
+        return;
+      }
+
+      // Prepare review data
+      const reviewData = {
+        rating: rating,
+        suggestion: suggestion || "No suggestion provided",
+        issue: issue || "No issues reported",
+      };
+      if (journeyDetails) {
+        reviewData.journey = {
+          from: journeyDetails.startLocation?.name || "Unknown",
+          to: journeyDetails.endLocation?.name || "Unknown",
+          fare: journeyDetails.fare || "Unknown",
+          duration: journeyDetails.duration || "Unknown"
+        };
+      }
+
+      console.log("Submitting review:", reviewData);
+      console.log("Using endpoint:", `${baseURL}/api/reviews`);
+      
+      // Send data to API
+      const response = await axios.post(
+        `${baseURL}/api/reviews`, 
+        reviewData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log("Review submission response:", response.data);
+      
       setLoading(false);
       
       Alert.alert("Review Submitted", "Thank you for your feedback!", [
         { text: "OK", onPress: () => navigation.goBack() },
       ]);
       
+      // Reset form
       setSuggestion("");
       setIssue("");
       setRating(0);
-    }, 800);
+      
+    } catch (error) {
+      setLoading(false);
+      console.error("Error submitting review:", error);
+      
+      Alert.alert(
+        "Submission Error",
+        "There was a problem submitting your review. Please try again later.",
+        [{ text: "OK", style: "cancel" }]
+      );
+    }
   };
 
   // Get rating text display
@@ -72,6 +154,50 @@ const Review = () => {
     </TouchableOpacity>
   );
 
+  // Journey details display component
+  const renderJourneyDetails = () => {
+    if (!journeyDetails) return null;
+    
+    return (
+      <View style={styles.journeySection}>
+        <Text style={styles.sectionLabel}>Journey Details</Text>
+        <View style={styles.journeyDetailsContainer}>
+          <View style={styles.journeyRow}>
+            <FontAwesome5 name="map-marker-alt" size={14} color="#0b617e" style={styles.journeyIcon} />
+            <Text style={styles.journeyLabel}>From:</Text>
+            <Text style={styles.journeyText}>
+              {journeyDetails.startLocation?.name || "Unknown origin"}
+            </Text>
+          </View>
+          
+          <View style={styles.journeyRow}>
+            <FontAwesome5 name="map-marker" size={14} color="#0b617e" style={styles.journeyIcon} />
+            <Text style={styles.journeyLabel}>To:</Text>
+            <Text style={styles.journeyText}>
+              {journeyDetails.endLocation?.name || "Unknown destination"}
+            </Text>
+          </View>
+          
+          <View style={styles.journeyRow}>
+            <FontAwesome5 name="money-bill-wave" size={14} color="#0b617e" style={styles.journeyIcon} />
+            <Text style={styles.journeyLabel}>Fare:</Text>
+            <Text style={styles.journeyText}>
+              {journeyDetails.fare || "Not provided"}
+            </Text>
+          </View>
+          
+          <View style={styles.journeyRow}>
+            <FontAwesome5 name="clock" size={14} color="#0b617e" style={styles.journeyIcon} />
+            <Text style={styles.journeyLabel}>Duration:</Text>
+            <Text style={styles.journeyText}>
+              {journeyDetails.duration || "Not provided"}
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#f8f9fa" barStyle="dark-content" />
@@ -93,6 +219,11 @@ const Review = () => {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.card}>
+          {/* Journey Details Section (if available) */}
+          {renderJourneyDetails()}
+          
+          {journeyDetails && <View style={styles.divider} />}
+          
           {/* Rating Section */}
           <View style={styles.ratingSection}>
             <Text style={styles.sectionLabel}>How was your experience?</Text>
@@ -311,6 +442,38 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     marginLeft: 8,
   },
+  journeySection: {
+    marginBottom: 20,
+  },
+  journeyDetailsContainer: {
+    marginTop: 15,
+    backgroundColor: "#f8f9fa",
+    padding: 15,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  journeyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  journeyIcon: {
+    marginRight: 8,
+    width: 16,
+    textAlign: 'center',
+  },
+  journeyLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#555",
+    width: 70,
+  },
+  journeyText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#333",
+  }
 });
 
 export default Review;

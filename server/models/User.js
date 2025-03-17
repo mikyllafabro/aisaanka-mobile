@@ -59,6 +59,10 @@ const UserSchema = new mongoose.Schema({
     },
     resetPasswordToken: String,
     resetPasswordExpires: Date,
+    travelHistory: {
+        type: Array,
+        default: []
+    },
 });
 
 const UserModel = mongoose.model("users", UserSchema);

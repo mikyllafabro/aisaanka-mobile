@@ -1,10 +1,8 @@
 import {Platform} from 'react-native';
 
-let baseURL = '';
+let baseURL = Platform.OS === "android"
+  ? "http://192.168.1.59:3000"  // Match backend port
+  : "http://localhost:3000";    // For local testing in web/desktop
 
-{Platform.OS == 'android'
-    ? baseURL = 'http://192.168.127.108:8081/'
-    : baseURL = 'http://localhost:3000/'
-}
 
 export default baseURL;

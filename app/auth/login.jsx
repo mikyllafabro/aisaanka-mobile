@@ -10,10 +10,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
-  StyleSheet
+  StyleSheet,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons"; 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import  baseURL from "../../assets/common/baseUrl";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -22,15 +26,49 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   function handleSubmit() {
-    setIsLoading(true);
-    console.log("Bypassing authentication for frontend testing");
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push("../Screen/main");
-    }, 800);
+    console.log(email, password); 
+    const userData = {
+      email: email,
+      password,
+    };
+  
+    axios
+      .post(`${baseURL}/api/auth/login`, userData)
+      .then(res => {
+        console.log("Response from server: ", res.data);
+        
+        if (res.data.status === "ok") {  // ✅ Now correctly checking "status"
+          const { token, user } = res.data.data;
+          console.log("Login successful! Token:", token, "Role:", user.role);
+          
+          Alert.alert("Login successful!");
+          AsyncStorage.setItem("token", token);  // ✅ Store token correctly
+
+          if (user.role === "admin") {
+            router.push("/admin/dashboard");
+          } else {
+            router.push("/Screen/main");
+          }
+        } else {
+          console.log("Login failed: ", res.data.message); // ✅ Correctly logging failure
+        }
+      })
+      .catch(error => {
+        console.error("Login error: ", error.response ? error.response.data : error.message);
+        Alert.alert("Login error", error.response?.data?.message || "Something went wrong");
+      });
   }
+
+  // function handleSubmit() {
+  //   setIsLoading(true);
+  //   console.log("Bypassing authentication for frontend testing");
+    
+  //   // Simulate API call delay
+  //   setTimeout(() => {
+  //     setIsLoading(false);
+  //     router.push("../Screen/main");
+  //   }, 800);
+  // }
   
   return (
     <SafeAreaView style={styles.container}>

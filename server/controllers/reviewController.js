@@ -1,4 +1,6 @@
 import reviewModel from "../models/Review.js";
+import UserModel from "../models/User.js";
+import mongoose from "mongoose";
 
 // Create Review (Authenticated User)
 export const createreview = async (req, res) => {
@@ -7,7 +9,7 @@ export const createreview = async (req, res) => {
             return res.status(401).json({ message: "Unauthorized: Please log in" });
         }
 
-        const { issue, suggestion, rating } = req.body;
+        const { issue, suggestion, rating, journey } = req.body;
 
         // Validate input
         if (!issue || !suggestion || !rating) {
@@ -16,13 +18,21 @@ export const createreview = async (req, res) => {
 
         const newReview = new reviewModel({
             user: req.user._id, // Associate review with logged-in user
-            issue,
-            suggestion,
-            rating,
+            rating: rating,
+            suggestion: suggestion || "",
+            issue: issue || "",
+            journey: journey || null
         });
 
-        await newReview.save();
-        res.status(201).json(newReview);
+        const savedReview = await newReview.save();
+        await UserModel.findByIdAndUpdate(
+          req.user._id,
+          { $push: { reviews: savedReview._id } }
+        );
+        res.status(201).json({
+          message: "Review submitted successfully",
+          review: savedReview
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
